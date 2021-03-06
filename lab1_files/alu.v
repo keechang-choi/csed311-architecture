@@ -1,6 +1,8 @@
 `include "alu_func.v"
 `include "alu_addsub.v"
 `include "alu_bitwise.v"
+`include "alu_shift.v"
+`include "alu_others.v"
 module ALU #(parameter data_width = 16) (
 	input [data_width - 1 : 0] A, 
 	input [data_width - 1 : 0] B, 
@@ -32,6 +34,26 @@ ALU_bitwise #(16) alu_bitwise (
 	.FuncCode(FuncCode),
 	.C(C_bitwise),
 	.OverflowFlag(OverflowFlag_bitwise)
+);
+
+wire [data_width-1:0] C_shift;
+wire OverflowFlag_shift;
+ALU_shift #(16) alu_shift (
+	.A(A),
+	.B(B),	
+	.FuncCode(FuncCode),
+	.C(C_shift),
+	.OverflowFlag(OverflowFlag_shift)
+);
+
+wire [data_width-1:0] C_others;
+wire OverflowFlag_others;
+ALU_others #(16) alu_others (
+	.A(A),
+	.B(B),	
+	.FuncCode(FuncCode),
+	.C(C_others),
+	.OverflowFlag(OverflowFlag_others)
 );
 
 
@@ -85,6 +107,34 @@ always @(*) begin
 	`FUNC_XNOR : begin 
 		C = C_bitwise;
 		OverflowFlag = OverflowFlag_bitwise;
+	end
+	`FUNC_LLS : begin
+		C = C_shift;
+		OverflowFlag = OverflowFlag_shift;
+	end
+	`FUNC_LRS : begin 
+		C = C_shift;
+		OverflowFlag = OverflowFlag_shift;
+	end
+	`FUNC_ALS: begin
+		C = C_shift;
+		OverflowFlag = OverflowFlag_shift;
+	end
+	`FUNC_ARS: begin
+		C = C_shift;
+		OverflowFlag = OverflowFlag_shift;
+	end
+	`FUNC_ID : begin
+		C = C_others;
+		OverflowFlag = OverflowFlag_others;
+	end
+	`FUNC_TCP : begin 
+		C = C_others;
+		OverflowFlag = OverflowFlag_others;
+	end
+	`FUNC_ZERO: begin
+		C = C_others;
+		OverflowFlag = OverflowFlag_others;
 	end
 
 	default : begin
