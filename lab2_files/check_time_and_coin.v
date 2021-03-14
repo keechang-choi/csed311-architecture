@@ -2,19 +2,17 @@
 
 	
 
-module check_time_and_coin(i_input_coin,i_select_item,clk,reset_n,wait_time,o_return_coin);
+module check_time_and_coin(i_input_coin,i_select_item,clk,reset_n,wait_time);
 	input clk;
 	input reset_n;
 	input [`kNumCoins-1:0] i_input_coin;
 	input [`kNumItems-1:0]	i_select_item;
-	output reg  [`kNumCoins-1:0] o_return_coin;
 	output reg [31:0] wait_time;
 
 	// initiate values
 	initial begin
 		// TODO: initiate values
 		wait_time = `kWaitTime;
-		o_return_coin = 0;
 	end
 
 
@@ -24,19 +22,10 @@ module check_time_and_coin(i_input_coin,i_select_item,clk,reset_n,wait_time,o_re
 		wait_time = `kWaitTime;
 	end
 
-	always @(*) begin
-		// TODO: o_return_coin
-		// ?? how o_return_coin represent changes?
-		if (wait_time == 0) begin
-			o_return_coin = i_input_coin;
-		end
-	end
-
 	always @(posedge clk ) begin
 		if (!reset_n) begin
 		// TODO: reset all states.
 			wait_time = `kWaitTime;
-			o_return_coin = 0;
 		end
 		else begin
 		// TODO: update all states.
