@@ -58,16 +58,18 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 				return_total = return_total + coin_value[i];
 			end
 		end
+	end
 
-		available_item = 'b0;
+	always @(*) begin
+		o_available_item = 'b0;
 		for(i=0;i<`kNumItems;i=i+1) begin
 			mask = 'b0001;
 			mask = mask << i;
 			if (item_price[i] <= current_total) begin
-				available_item = available_item | mask;	
+				o_available_item = o_available_item | mask;	
 			end
 		end
-		o_output_item = i_select_item & available_item;
+		o_output_item = i_select_item & o_available_item;
 	end
  
 	
