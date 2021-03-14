@@ -25,6 +25,7 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 		// TODO: current_total_nxt
 		// You don't have to worry about concurrent activations in each input vector (or array).
 		// Calculate the next current_total state.
+		input_total = 0;
 		for(i=0;i<`kNumCoins;i=i+1) begin
 			mask = 'b001;
 			mask = mask << i;
@@ -32,7 +33,7 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 				input_total = input_total + coin_value[i];
 			end
 		end
-		
+		output_total = 0;
 		for(i=0;i<`kNumItems;i=i+1) begin
 			mask = 'b0001;
 			mask = mask << i;
@@ -49,11 +50,21 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 	always @(*) begin
 		// TODO: o_available_item
 		// TODO: o_output_item
+		return_total = 0;
 		for(i=0;i<`kNumCoins;i=i+1) begin
 			mask = 'b001;
 			mask = mask << i;
 			if ((o_return_coin & mask) == mask) begin
-				return_total = o_return_coin + coin_value[i];
+				return_total = return_total + coin_value[i];
+			end
+		end
+
+		available_item = 'b0;
+		for(i=0;i<`kNumItems;i=i+1) begin
+			mask = 'b0001;
+			mask = mask << i;
+			if (item_price[i] <= current_total) begin
+				available_itme = available_item | mask;	
 			end
 		end
 	end
