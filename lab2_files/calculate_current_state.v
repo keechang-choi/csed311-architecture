@@ -64,9 +64,10 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 			mask = 'b0001;
 			mask = mask << i;
 			if (item_price[i] <= current_total) begin
-				available_itme = available_item | mask;	
+				available_item = available_item | mask;	
 			end
 		end
+		o_output_item = i_select_item & available_item;
 	end
  
 	
