@@ -26,6 +26,10 @@ module check_time_and_coin(i_input_coin,i_select_item,clk,reset_n,wait_time,o_re
 
 	always @(*) begin
 		// TODO: o_return_coin
+		// ?? how o_return_coin represent changes?
+		if (wait_time == 0) begin
+			o_return_coin = i_input_coin;
+		end
 	end
 
 	always @(posedge clk ) begin

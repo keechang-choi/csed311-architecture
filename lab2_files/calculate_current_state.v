@@ -16,16 +16,38 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 	output reg [`kNumItems-1:0] o_available_item,o_output_item;
 	output reg  [`kTotalBits-1:0] input_total, output_total, return_total,current_total_nxt;
 	integer i;	
-
-
-
 	
+	101
+	coin_value[0]
+	coin_value[2]
+	100 -> coin_value[2]
+	
+	010
+	coin_value[1]
+
+
+	reg mask;
+
 	// Combinational logic for the next states
 	always @(*) begin
 		// TODO: current_total_nxt
 		// You don't have to worry about concurrent activations in each input vector (or array).
 		// Calculate the next current_total state.
+		for(i=0;i<`kNumCoins;i=i+1) begin
+			mask = 'b001;
+			mask = mask << i;
+			if ((i_input_coin & mask) == mask) begin
+				current_total_nxt = current_total + coin_value[i]
+			end
+		end
 		
+		for(i=0;i<`kNumItems;i=i+1) begin
+			mask = 'b0001;
+			mask = mask << i;
+			if ((i_input_coin & mask) == mask) begin
+				current_total_nxt = current_total_nxt - item_price[i]
+			end
+		end
 	end
 
 	
