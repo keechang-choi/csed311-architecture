@@ -20,12 +20,20 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 
 	reg mask;
 
+	initial begin
+		input_total = 0;
+		output_total = 0;
+		return_total = 0;
+		o_available_item = 4'b0000;
+	
+	end
+
 	// Combinational logic for the next states
 	always @(*) begin
 		// TODO: current_total_nxt
 		// You don't have to worry about concurrent activations in each input vector (or array).
 		// Calculate the next current_total state.
-		input_total = 0;
+
 		for(i=0;i<`kNumCoins;i=i+1) begin
 			mask = 'b001;
 			mask = mask << i;
@@ -33,7 +41,9 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 				input_total = input_total + coin_value[i];
 			end
 		end
-		output_total = 0;
+
+
+
 		for(i=0;i<`kNumItems;i=i+1) begin
 			mask = 'b0001;
 			mask = mask << i;
@@ -41,16 +51,17 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 				output_total = output_total + item_price[i];
 			end
 		end
+
 		current_total_nxt = current_total + input_total - output_total;
 	end
 
 	
 	
 	// Combinational logic for the outputs
-	always @(*) begin
+	always @(o_return_coin, current_total, i_select_item) begin
 		// TODO: o_available_item
 		// TODO: o_output_item
-		return_total = 0;
+
 		for(i=0;i<`kNumCoins;i=i+1) begin
 			mask = 'b001;
 			mask = mask << i;
@@ -58,12 +69,10 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 				return_total = return_total + coin_value[i];
 			end
 		end
-	end
 
-	always @(*) begin
-		o_available_item = 'b0;
+
 		for(i=0;i<`kNumItems;i=i+1) begin
-			mask = 'b0001;
+			mask = 4'b0001;
 			mask = mask << i;
 			if (item_price[i] <= current_total) begin
 				o_available_item = o_available_item | mask;	
@@ -72,7 +81,5 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 		o_output_item = i_select_item & o_available_item;
 	end
  
-	
-
 
 endmodule 
