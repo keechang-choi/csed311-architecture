@@ -17,14 +17,6 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 	output reg  [`kTotalBits-1:0] input_total, output_total, return_total,current_total_nxt;
 	integer i;	
 	
-	101
-	coin_value[0]
-	coin_value[2]
-	100 -> coin_value[2]
-	
-	010
-	coin_value[1]
-
 
 	reg mask;
 
@@ -37,17 +29,18 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 			mask = 'b001;
 			mask = mask << i;
 			if ((i_input_coin & mask) == mask) begin
-				current_total_nxt = current_total + coin_value[i]
+				input_total = input_total + coin_value[i];
 			end
 		end
 		
 		for(i=0;i<`kNumItems;i=i+1) begin
 			mask = 'b0001;
 			mask = mask << i;
-			if ((i_input_coin & mask) == mask) begin
-				current_total_nxt = current_total_nxt - item_price[i]
+			if ((i_select_item & mask) == mask) begin
+				output_total = output_total + item_price[i];
 			end
 		end
+		current_total_nxt = current_total + input_total - output_total;
 	end
 
 	
@@ -56,7 +49,13 @@ input_total, output_total, return_total,current_total_nxt,wait_time,o_return_coi
 	always @(*) begin
 		// TODO: o_available_item
 		// TODO: o_output_item
-
+		for(i=0;i<`kNumCoins;i=i+1) begin
+			mask = 'b001;
+			mask = mask << i;
+			if ((o_return_coin & mask) == mask) begin
+				return_total = o_return_coin + coin_value[i];
+			end
+		end
 	end
  
 	
