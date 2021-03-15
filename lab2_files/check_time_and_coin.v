@@ -11,7 +11,7 @@ module check_time_and_coin(i_input_coin,i_select_item,clk,reset_n,wait_time);
 
 	// initiate values
 	initial begin
-		// TODO: initiate values
+		// TODO: initiate values 
 		wait_time = `kWaitTime;
 	end
 
@@ -19,17 +19,17 @@ module check_time_and_coin(i_input_coin,i_select_item,clk,reset_n,wait_time);
 	// update coin return time
 	always @(i_input_coin, i_select_item) begin
 		// TODO: update coin return time
-		wait_time = `kWaitTime;
+		wait_time <= `kWaitTime;
 	end
 
 	always @(posedge clk ) begin
 		if (!reset_n) begin
 		// TODO: reset all states.
-			wait_time = `kWaitTime;
+			wait_time <= `kWaitTime;
 		end
 		else begin
 		// TODO: update all states.
-			wait_time = wait_time - 1;
+			wait_time <= wait_time - 1;
 		end
 	end
 endmodule 
