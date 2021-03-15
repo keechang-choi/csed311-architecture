@@ -16,7 +16,7 @@ o_output_item,i_trigger_return);
 	input [31:0] wait_time;
 	output reg [`kNumItems-1:0] o_available_item,o_output_item;
 	output reg  [`kTotalBits-1:0] input_total, output_total, return_total,current_total_nxt;
-	output reg o_return_coin;
+	output reg [`kNumCoins-1:0] o_return_coin;
 	integer i;	
 	
 
