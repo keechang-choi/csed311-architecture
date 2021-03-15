@@ -19,7 +19,9 @@ module check_time_and_coin(i_input_coin,i_select_item,clk,reset_n,wait_time);
 	// update coin return time
 	always @(i_input_coin, i_select_item) begin
 		// TODO: update coin return time
-		wait_time <= `kWaitTime;
+		if(i_input_coin > 0 || i_select_item > 0) begin
+			wait_time <= `kWaitTime;
+		end
 	end
 
 	always @(posedge clk ) begin
