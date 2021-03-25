@@ -10,13 +10,16 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
 
     reg [3:0] registers [15:0];
 
-    always @(*) begin
+/*    always @(*) begin
         read_out1 = registers[read1];
     end
 
     always @(*) begin
         read_out2 = registers[read2];
     end
+*/
+	assign read_out1 = registers[read1];
+	assign read_out2 = registers[read2];
 
 // Is posedge correct?
     always @(posedge clk ) begin

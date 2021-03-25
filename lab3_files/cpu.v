@@ -1,9 +1,10 @@
 `include "opcodes.v" 	   
 
+
 module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
-	output readM;									
-	output writeM;								
-	output [`WORD_SIZE-1:0] address;	
+	output reg readM;									
+	output reg writeM;								
+	output reg [`WORD_SIZE-1:0] address;	
 	inout [`WORD_SIZE-1:0] data;		
 	input ackOutput;								
 	input inputReady;								
@@ -37,73 +38,16 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire read_out1;
 	wire read_out2;
 
-
+	assign immediate_value = data[7:0];
+	assign read1 = data[11:10];
+	assign read2 = data[9:8];
+	assign write_reg = data[7:6];
+	assign opcode = data[15:12];
+	assign funcode = data[5:0];
 	assign alu_input_1 = read_out1;
 	assign alu_input2 = alu_src > 0 ? immediate_value : read_out2;
 
-	initial begin
-		pc = 0;
-	end
-	
-	// load instruction
-	always @(posedge clk) begin
-		// do something
-		address = pc;
-		readM = 1;
-	end
 
-	// load data from memory to register
-	always @(negedge clk) begin
-		if(mem_read > 0) begin
-			address = alu_output;
-			readM = 1;
-		end
-	end
-
-	// write to memory 
-	always @(negedge clk)  begin
-		if(mem_write > 0)begin
-			address = alu_output;
-			writeM = 1;
-		end
-	end
-
-	// fetch instruction
-	always @(*) begin
-		if(inputReady > 0 && clk > 0) begin			
-			pc = pc + 1;
-			immediate_value = data[7:0];
-			read1 = data[11:10];
-			read2 = data[9:8];
-			write_reg = data[7:6];
-			op_code = data[15:12];
-			funcode = data[5:0];
-			readM = 0;
-		end
-	end
-
-	// push data from memory to register
-	always @(*) begin
-		if(inputReady > 0 && clk == 0)begin
-			write_data = data;
-			readM = 0;
-		end
-	end
-
-	// reset writeM
-	always @(*) begin
-		if(ackOutput>0)begin
-			writeM = 0;
-		end
-	end
-
-	always @(*) begin
-		// jump cases. Needs to change pc 
-	end
-
-	
-
-	
 
 	alu alu_module(.alu_input_1(alu_input_1),
   					.alu_input_2(alu_input_2),
@@ -130,7 +74,80 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		.jp(jp),
 		.branch(branch));
 
+	initial begin
+		pc = 0;
+	end
 	
+	// fetch instruction
+	always @(*) begin
+
+	end
+
+	// push data from memory to register
+	always @(*) begin
+		if(inputReady == 1 )begin
+			readM = 0;
+		end
+	end
+
+	// reset writeM
+	always @(*) begin
+		if(ackOutput == 1)begin
+			writeM = 0;
+		end
+	end
+
+	always @(*) begin
+		// jump cases. Needs to change pc 
+	end
+
+	
+	// load instruction
+	always @(posedge clk) begin
+		// do something
+		address = pc;
+		readM = 1;
+	end
+
+	// load data from memory to register
+	always @(negedge clk) begin
+		if(mem_read > 0) begin
+			address = alu_output;
+			readM = 1;
+		end
+	end
+
+	// write to memory 
+	always @(negedge clk)  begin
+		if(mem_write > 0)begin
+			address = alu_output;
+			writeM = 1;
+		end
+	end
 
 																																					  
-endmodule							  																		  
+endmodule		
+
+
+module PC(PC_in, PC_out, reset_n, clk);
+	input clk;
+	input reset_n;
+	input [`WORD_SIZE-1:0] PC_in;
+	output reg [`WORD_SIZE-1:0] PC_out;
+
+	initial begin
+		PC_out = 0;
+	end
+	
+	always @(posedge reset_n)
+	begin
+		PC_out <= 0 ;
+	end
+	
+	always @(posedge clk) 
+	begin
+		PC_out <= PC_in;
+	end
+endmodule
+
+					  																		  
