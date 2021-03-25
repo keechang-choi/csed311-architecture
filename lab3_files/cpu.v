@@ -39,30 +39,51 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 
 	assign alu_input_1 = read_out1;
 	assign alu_input2 = alu_src > 0 ? immediate_value : read_out2;
-	assign alu_output = address;
-	assign write_data = data;
 
 	initial begin
-		// need?
 		pc = 0;
 	end
 	
-
+	// load instruction
 	always @(posedge clk) begin
-		pc <= pc +1;
+		// do something
+		// assign readM = 1;
+	end
+
+	// load data from memory to register
+	always @(negedge clk) begin
+		// if(mem_to_reg) begin
+		// 	assign address = alu_output;
+		// 	assign readM = 1;
+		// end
+	end
+
+	always @(*) begin
 		if(inputReady) begin			
-			immediate_value <= data[7:0];
-			read1 <= data[11:10];
-			read2 <= data[9:8];
-			write_reg <= data[7:6];
-			op_code <= data[15:12];
-			funcode <= data[5:0];
+			immediate_value = data[7:0];
+			read1 = data[11:10];
+			read2 = data[9:8];
+			write_reg = data[7:6];
+			op_code = data[15:12];
+			funcode = data[5:0];
 		end
 	end
 
-	always @(*)  begin
-
+	always @(*) begin
+		// jump cases. change pc 
 	end
+
+	always @(*)  begin
+		// if(mem_write>0)begin
+		// 	assign data = alu_output;
+		// 	assign writeM = 1;
+		// end
+		// else if(mem_read>0)begin
+		// 	assign readM = 1;
+		// end
+	end
+
+	
 
 	alu alu_module(.alu_input_1(alu_input_1),
   					.alu_input_2(alu_input_2),
