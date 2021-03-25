@@ -9,53 +9,54 @@ output reg mem_to_reg;
 output reg mem_write;
 output reg jp;
 output reg branch;
-
+	wire [3:0] opcode;
+	assign opcode = instr[15:12];
 	always @(*)
 	begin
-		if(instr==`ADI_OP ||instr==`ORI_OP || instr==`LHI_OP ||
- 		instr==`LWD_OP || instr==`SWD_OP ||
- 		instr==`BNE_OP || instr==`BEQ_OP || instr==`BGZ_OP || instr==`BLZ_OP ) begin
+		if(opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
+ 		opcode==`LWD_OP || opcode==`SWD_OP ||
+ 		opcode==`BNE_OP || opcode==`BEQ_OP || opcode==`BGZ_OP || opcode==`BLZ_OP ) begin
 			alu_src = 1;
 		end
 		else begin
 			alu_src = 0;
 		end
-		if(instr==`ALU_OP ||instr==`ADI_OP ||instr==`ORI_OP || instr==`LHI_OP ||
- 		instr==`LWD_OP || instr==`JAL_OP ||instr==`JRL_OP) begin
+		if(opcode==`ALU_OP ||opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
+ 		opcode==`LWD_OP || opcode==`JAL_OP ||opcode==`JRL_OP) begin
 			reg_write = 1;
 		end
 		else begin
 			reg_write = 0;
 		end	
-		if(instr==`LWD_OP) begin
+		if(opcode==`LWD_OP) begin
 			mem_read = 1;
 		end
 		else begin
 			mem_read = 0;
 		end	
 
-		if(instr==`LWD_OP ) begin
+		if(opcode==`LWD_OP ) begin
 			mem_to_reg = 1;
 		end
 		else begin
 			mem_to_reg = 0;
 		end	
 
-		if(instr==`SWD_OP ) begin
+		if(opcode==`SWD_OP ) begin
 			mem_write = 1;
 		end
 		else begin
 			mem_write = 0;
 		end	
-		if(instr==`JMP_OP || instr==`JAL_OP ||
-		instr==`JPR_OP ||instr==`JRL_OP) begin
+		if(opcode==`JMP_OP || opcode==`JAL_OP ||
+		opcode==`JPR_OP ||opcode==`JRL_OP) begin
 			jp= 1;
 		end
 		else begin
 			jp = 0;
 		end	
-		if(instr==`BNE_OP || instr==`BEQ_OP ||
-		instr==`BGZ_OP ||instr==`BLZ_OP) begin
+		if(opcode==`BNE_OP || opcode==`BEQ_OP ||
+		opcode==`BGZ_OP ||opcode==`BLZ_OP) begin
 			branch= 1;
 		end
 		else begin

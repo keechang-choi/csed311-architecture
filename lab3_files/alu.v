@@ -11,22 +11,22 @@ module alu (alu_input_1, alu_input_2, func_code, alu_output);
 	always @(*)
 	begin
 		case (func_code)
-		FUNC_ADD: alu_output = alu_input_1 + alu_input_2;
-		FUNC_SUB: alu_output = alu_input_1 - alu_input_2;
-		FUNC_AND: alu_output = alu_input_1 & alu_input_2;
-		FUNC_ORR: alu_output = alu_input_1 | alu_input_2;
-		FUNC_NOT: alu_output = ~alu_input_1;
-		FUNC_TCP: alu_output = ~alu_input_1 + 1;
-		FUNC_SHL: alu_output = alu_input_1 << 1;
-		FUNC_SHR: alu_output = alu_input_1 >> 1;
-		INST_FUNC_ADD: alu_output = alu_input_1 + alu_input_2;
-		INST_FUNC_SUB: alu_output = alu_input_1 - alu_input_2;
-		INST_FUNC_AND: alu_output = alu_input_1 & alu_input_2;
-		INST_FUNC_ORR: alu_output = alu_input_1 | alu_input_2;
-		INST_FUNC_NOT: alu_output = ~alu_input_1;
-		INST_FUNC_TCP: alu_output = ~alu_input_1 + 1;
-		INST_FUNC_SHL: alu_output = alu_input_1 << 1;
-		INST_FUNC_SHR: alu_output = alu_input_1 >> 1;
+		`FUNC_ADD: alu_output = alu_input_1 + alu_input_2;
+		`FUNC_SUB: alu_output = alu_input_1 - alu_input_2;
+		`FUNC_AND: alu_output = alu_input_1 & alu_input_2;
+		`FUNC_ORR: alu_output = alu_input_1 | alu_input_2;
+		`FUNC_NOT: alu_output = ~alu_input_1;
+		`FUNC_TCP: alu_output = ~alu_input_1 + 1;
+		`FUNC_SHL: alu_output = alu_input_1 << 1;
+		`FUNC_SHR: alu_output = alu_input_1 >> 1;
+		`INST_FUNC_ADD: alu_output = alu_input_1 + alu_input_2;
+		`INST_FUNC_SUB: alu_output = alu_input_1 - alu_input_2;
+		`INST_FUNC_AND: alu_output = alu_input_1 & alu_input_2;
+		`INST_FUNC_ORR: alu_output = alu_input_1 | alu_input_2;
+		`INST_FUNC_NOT: alu_output = ~alu_input_1;
+		`INST_FUNC_TCP: alu_output = ~alu_input_1 + 1;
+		`INST_FUNC_SHL: alu_output = alu_input_1 << 1;
+		`INST_FUNC_SHR: alu_output = alu_input_1 >> 1;
 		endcase
 	end
 
