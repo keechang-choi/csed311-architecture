@@ -12,9 +12,10 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 
 
 	reg pc;
-	reg immediate_value;
-	reg opcode;
-	reg funcode;
+	wire immediate_value;
+	wire opcode;
+	wire funcode;
+	wire write_reg;
 	// alu input & output
 	wire alu_input_1;
 	wire alu_input_2;
@@ -30,9 +31,9 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire branch;
 
 	// register input & output
-	reg write_data;
-	reg read1;
-	reg read2;
+	wire write_data;
+	wire read1;
+	wire read2;
 	wire read_out1;
 	wire read_out2;
 
@@ -47,41 +48,60 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	// load instruction
 	always @(posedge clk) begin
 		// do something
-		// assign readM = 1;
+		address = pc;
+		readM = 1;
 	end
 
 	// load data from memory to register
 	always @(negedge clk) begin
-		// if(mem_to_reg) begin
-		// 	assign address = alu_output;
-		// 	assign readM = 1;
-		// end
+		if(mem_read > 0) begin
+			address = alu_output;
+			readM = 1;
+		end
 	end
 
+	// write to memory 
+	always @(negedge clk)  begin
+		if(mem_write > 0)begin
+			address = alu_output;
+			writeM = 1;
+		end
+	end
+
+	// fetch instruction
 	always @(*) begin
-		if(inputReady) begin			
+		if(inputReady > 0 && clk > 0) begin			
+			pc = pc + 1;
 			immediate_value = data[7:0];
 			read1 = data[11:10];
 			read2 = data[9:8];
 			write_reg = data[7:6];
 			op_code = data[15:12];
 			funcode = data[5:0];
+			readM = 0;
+		end
+	end
+
+	// push data from memory to register
+	always @(*) begin
+		if(inputReady > 0 && clk == 0)begin
+			write_data = data;
+			readM = 0;
+		end
+	end
+
+	// reset writeM
+	always @(*) begin
+		if(ackOutput>0)begin
+			writeM = 0;
 		end
 	end
 
 	always @(*) begin
-		// jump cases. change pc 
+		// jump cases. Needs to change pc 
 	end
 
-	always @(*)  begin
-		// if(mem_write>0)begin
-		// 	assign data = alu_output;
-		// 	assign writeM = 1;
-		// end
-		// else if(mem_read>0)begin
-		// 	assign readM = 1;
-		// end
-	end
+	
 
 	
 
