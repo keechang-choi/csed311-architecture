@@ -21,6 +21,8 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire [`WORD_SIZE-1:0] alu_input_1;
 	wire [`WORD_SIZE-1:0] alu_input_2;
 	wire [`WORD_SIZE-1:0] alu_output;
+	wire [5:0] funcode;
+	wire [5:0] alu_op;
 
 	//  control_unit output
 	wire alu_src;
@@ -50,7 +52,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	assign read2 = inst[9:8];
 	assign write_reg = inst[7:6];
 	assign opcode = inst[15:12];
-	assign funcode = inst[5:0];
+	assign funcode = (alu_src == 1) ? alu_op : inst[5:0];
 
 	register_file register_file_module(
 		.read_out1(read_out1),
@@ -84,6 +86,15 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		.jp(jp),
 		.branch(branch));
 
+	always @(*) begin
+		case (opcode)
+		`ADI_OP: alu_op = `FUNC_ADD;
+		`ORI_OP: alu_op = `FUNC_ORR;  
+		`LWD_OP: alu_op = `FUNC_ADD; 
+		`SWD_OP: alu_op = `FUNC_ADD;
+		endcase
+	end
+	
 
 	
 	// fetch instruction
