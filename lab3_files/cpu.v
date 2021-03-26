@@ -52,16 +52,6 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	assign opcode = inst[15:12];
 	assign funcode = inst[5:0];
 
-	assign alu_input_1 = read_out1;
-	assign alu_input_2 = alu_src > 0 ? immediate_value : read_out2;
-	// edit after implemeting data memory & jump
-	assign write_data = mem_to_reg > 0 ? alu_output : pc;
-
-	alu alu_module(.alu_input_1(alu_input_1),
-  					.alu_input_2(alu_input_2),
-					.func_code(funcode),
-					.alu_output(alu_output));
-
 	register_file register_file_module(
 		.read_out1(read_out1),
 		.read_out2(read_out2),
@@ -71,6 +61,18 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		.write_data(write_data),
 		.reg_write(reg_write),
 		.clk(clk));
+
+	assign alu_input_1 = read_out1;
+	assign alu_input_2 = alu_src > 0 ? immediate_value : read_out2;
+	// edit after implemeting data memory & jump
+	assign write_data = alu_output;//mem_to_reg > 0 ? alu_output;
+
+	alu alu_module(.alu_input_1(alu_input_1),
+  					.alu_input_2(alu_input_2),
+					.func_code(funcode),
+					.alu_output(alu_output));
+
+
 
 	control_unit control_unit_module(
 		.instr(inst),
@@ -86,7 +88,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	
 	// fetch instruction
 	always @(*) begin
-
+		$display("@@@@read_out1 : %d", read_out1);
 	end
 
 	// push data from memory to register
