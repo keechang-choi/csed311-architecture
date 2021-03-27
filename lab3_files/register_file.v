@@ -7,8 +7,8 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
     input [15:0] write_data;
     input reg_write;
     input clk;
-
-    reg [3:0] registers [15:0];
+    // sibal
+    reg [15:0] registers [3:0];
 
 /*    always @(*) begin
         read_out1 = registers[read1];
@@ -26,14 +26,19 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
 	end
 	assign read_out1 = registers[read1];
 	assign read_out2 = registers[read2];
-	always @(posedge clk) begin
-		$display("@@@@register : %d %d %d %d",registers[0],registers[1],registers[2],registers[3]);
-	end
 // Is posedge correct?
-    always @(posedge clk ) begin
-        if(reg_write) begin
+	always @(posedge clk) begin
+		$display("~~~~register write : %d ",write_data);
+		$display("~~~~register : %d %d %d %d",registers[0],registers[1],registers[2],registers[3]);
+      
+	end
+    always @(negedge clk ) begin
+	if(reg_write) begin
             registers[write_reg] <= write_data;    
         end
+	$display("~~~~register write : %d ",write_data);
+	$display("~~~~register : %d %d %d %d",registers[0],registers[1],registers[2],registers[3]);
+      
     end
     
 endmodule
