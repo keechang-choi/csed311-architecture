@@ -17,12 +17,14 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire [3:0] opcode;
 	wire [5:0] funcode;
 	wire [1:0] write_reg;
+	wire bcond;
 	// alu input & output
 	wire [`WORD_SIZE-1:0] alu_input_1;
 	wire [`WORD_SIZE-1:0] alu_input_2;
 	wire [`WORD_SIZE-1:0] alu_output;
 	wire [5:0] funcode;
 	wire [5:0] alu_op;
+	wire target_address[11:0];
 
 	//  control_unit output
 	wire alu_src;
@@ -53,6 +55,9 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	assign write_reg = inst[7:6];
 	assign opcode = inst[15:12];
 	assign funcode = (alu_src == 1) ? alu_op : inst[5:0];
+	assign target_address = inst[11:0];
+
+
 
 	register_file register_file_module(
 		.read_out1(read_out1),
@@ -67,7 +72,9 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	assign alu_input_1 = read_out1;
 	assign alu_input_2 = alu_src > 0 ? immediate_value : read_out2;
 	// edit after implemeting data memory & jump
-	assign write_data = alu_output;//mem_to_reg > 0 ? alu_output;
+	// assign write_data = alu_output;//mem_to_reg > 0 ? alu_output;
+
+
 
 	alu alu_module(.alu_input_1(alu_input_1),
   					.alu_input_2(alu_input_2),
@@ -92,6 +99,8 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		`ORI_OP: alu_op = `FUNC_ORR;  
 		`LWD_OP: alu_op = `FUNC_ADD; 
 		`SWD_OP: alu_op = `FUNC_ADD;
+		`BNE_OP: alu_op = `FUNC_SUB;
+		`BEQ_OP: alu_op = `FUNC_SUB;
 		endcase
 	end
 	
@@ -160,7 +169,38 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 			address <= alu_output;
 			writeM <= 1;
 		end
-		pc <= pc + 1;
+	end
+
+	always @(negedge clk) begin
+		if(opcode == `JMP_OP) begin
+			pc <=  target_address;
+		end
+		else if(opcode == `JAL_OP)begin
+			pc <= target_address;
+			write_reg <= 2;
+			write_data <= pc + 1;
+		end
+		else if(opcode ==`JPR_OP) begin
+			pc <= read_out1;
+		end
+		else if(branch & bcond) begin
+			pc <= pc + immediate_value +1;
+		end
+	end
+
+	always @(*) begin
+		if(clk != 0 && !(opcode == `JAL_OP || opcode ==`JRL_OP)) begin
+			write_data =  data;
+		end
+	end
+
+	always @(*) begin
+		case (opcode)
+		`BNE_OP: bcond = alu_output == 0 ? 0 : 1;
+		`BEQ_OP: bcond = alu_output == 0 ? 1 : 0;  
+		`BGZ_OP: bcond = read1 > 0 ? 1 : 0;
+		`BLZ_OP: bcond = read1 < 0 ? 1 : 0;
+		endcase
 	end
 
 																																					  
