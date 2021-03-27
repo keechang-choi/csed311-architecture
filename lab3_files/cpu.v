@@ -22,9 +22,8 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire [`WORD_SIZE-1:0] alu_input_1;
 	wire [`WORD_SIZE-1:0] alu_input_2;
 	wire [`WORD_SIZE-1:0] alu_output;
-	wire [5:0] funcode;
-	wire [5:0] alu_op;
-	wire target_address[11:0];
+	reg [5:0] alu_op;
+	wire [11:0] target_address;
 
 	//  control_unit output
 	wire alu_src;
@@ -41,6 +40,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire [1:0] read2;
 	wire [`WORD_SIZE-1:0] read_out1;
 	wire [`WORD_SIZE-1:0] read_out2;
+	wire [15:0] extended_imm_value;
 
 	reg [`WORD_SIZE-1:0] inst;
 
@@ -56,7 +56,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	assign opcode = inst[15:12];
 	assign funcode = (alu_src == 1) ? alu_op : inst[5:0];
 	assign target_address = inst[11:0];
-
+	assign extended_imm_value = {{8{immediate_value[7]}}, immediate_value[7:0]};
 
 
 	register_file register_file_module(
@@ -70,9 +70,9 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		.clk(clk));
 
 	assign alu_input_1 = read_out1;
-	assign alu_input_2 = alu_src > 0 ? immediate_value : read_out2;
+	assign alu_input_2 = alu_src > 0 ? extended_imm_value : read_out2;
 	// edit after implemeting data memory & jump
-	// assign write_data = alu_output;//mem_to_reg > 0 ? alu_output;
+	assign write_data = alu_output;//mem_to_reg > 0 ? alu_output;
 
 
 
