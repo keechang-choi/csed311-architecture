@@ -35,7 +35,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire branch;
 
 	// register input & output
-	wire [`WORD_SIZE-1:0] write_data;
+	reg [`WORD_SIZE-1:0] write_data;
 	wire [1:0] read1;
 	wire [1:0] read2;
 	wire [`WORD_SIZE-1:0] read_out1;
@@ -77,7 +77,6 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	assign alu_input_1 = read_out1;
 	assign alu_input_2 = alu_src > 0 ? extended_imm_value : read_out2;
 	// edit after implemeting data memory & jump
-	assign write_data = (opcode==`JAL_OP) ? pc+1 : alu_output;//mem_to_reg > 0 ? alu_output;
 
 
 	assign data = mem_rw ? read_out2 : 16'bz;
@@ -109,7 +108,19 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		`BEQ_OP: alu_op = `FUNC_SUB;
 		endcase
 	end
-	
+		// assign write_data = mem_to_reg > 0 ? data :((opcode==`JAL_OP) ? pc+1 : alu_output);//mem_to_reg > 0 ? alu_output;
+
+	always @(*) begin
+		if(mem_to_reg) begin
+			if(inputReady) begin
+				readM = 0;
+				write_data = data;
+			end
+		end
+		else begin
+			write_data = (opcode ==`JAL_OP) ? pc+1 : alu_output;
+		end
+	end
 
 	
 	// fetch instruction
@@ -188,23 +199,23 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	// pc value not correct after 5 cycle
 	// need to use pc module and mux
 	always @(negedge clk) begin
-		if(opcode == `JMP_OP) begin
-			pc <=  target_address;
-		end
-		else if(opcode == `JAL_OP)begin
-			pc <= target_address;
-		//	write_reg <= 2;
-		//	write_data <= pc + 1;
-		end
-		else if(opcode ==`JPR_OP) begin
-			pc <= read_out1;
-		end
-		else if(branch & bcond) begin
-			pc <= pc + immediate_value +1;
-		end
-		else begin
+		// if(opcode == `JMP_OP) begin
+		// 	pc <=  target_address;
+		// end
+		// else if(opcode == `JAL_OP)begin
+		// 	pc <= target_address;
+		// //	write_reg <= 2;
+		// //	write_data <= pc + 1;
+		// end
+		// else if(opcode ==`JPR_OP) begin
+		// 	pc <= read_out1;
+		// end
+		// else if(branch & bcond) begin
+		// 	pc <= pc + immediate_value +1;
+		// end
+		// else begin
 			pc <= pc+1;
-		end
+		// end
 	end
 /*
 	always @(*) begin
