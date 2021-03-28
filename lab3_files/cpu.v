@@ -13,6 +13,13 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 
 
 	reg [`WORD_SIZE-1:0]pc;
+
+	wire [`WORD_SIZE-1:0] pc_in;
+	wire [`WORD_SIZE-1:0] pc_out;
+	wire [`WORD_SIZE-1:0] pc_plus_1;
+	wire [`WORD_SIZE-1:0] pc_plus_imm;
+	wire [`WORD_SIZE-1:0] pc_jump;
+
 	wire [7:0] immediate_value;
 	wire [3:0] opcode;
 	wire [5:0] funcode;
@@ -42,6 +49,18 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	wire [`WORD_SIZE-1:0] read_out2;
 	wire [15:0] extended_imm_value;
 
+	MUX2 mux_pc_jump(.in0( read_out1 ), .in1({pc_out[15:12], target_address}),
+			.ctrl( (opcode==`JAL_OP||opcode==`JMP_OP) ),
+			.out(pc_jump));
+	assign pc_plus_1 = pc_out + 16'b1;
+	assign pc_plus_imm = pc_plus_1 + extended_imm_value;
+
+	PC program_counter(.pc_in(pc_in), .pc_out(pc_out), .clk(clk), .reset_n(reset_n));
+
+	MUX4 mux_pc_in(.in0(pc_plus_1), .in1(pc_plus_imm), .in2(pc_jump), .in3(pc_jump),
+			.ctrl( {jp, (branch & bcond)} ),
+			.out(pc_in));
+
 	reg [`WORD_SIZE-1:0] inst;
 	reg mem_rw;
 
@@ -54,6 +73,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	assign immediate_value = inst[7:0];
 	assign read1 = inst[11:10];
 	assign read2 = inst[9:8];
+
 	//assign write_reg = (opcode == `JAL_OP)? 2'b10 : inst[7:6];
 	MUX4 mux_write_reg(.in0(inst[7:6]), .in1(2'b10), .in2(inst[9:8]), .in3(inst[9:8]), 
 		.ctrl( { (alu_src),(opcode==`JAL_OP)} ), 
@@ -75,7 +95,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		.clk(clk));
 
 	assign alu_input_1 = read_out1;
-	assign alu_input_2 = alu_src > 0 ? extended_imm_value : read_out2;
+	assign alu_input_2 = (alu_src > 0 && branch != 1)? extended_imm_value : read_out2;
 	// edit after implemeting data memory & jump
 
 
@@ -118,7 +138,8 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 			end
 		end
 		else begin
-			write_data = (opcode ==`JAL_OP) ? pc+1 : alu_output;
+			//write_data = (opcode ==`JAL_OP) ? pc+1 : alu_output;
+			write_data = (opcode == `JAL_OP) ? pc_plus_1 : ((opcode == `LHI_OP)? extended_imm_value<<8 : alu_output);
 		end
 	end
 
@@ -138,9 +159,9 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 			if(address < 30) begin
 				inst = data;
 			end
-			else begin
+			/*else begin
 				inst = 0;
-			end
+			end*/
 		end
 	end
 
@@ -159,29 +180,35 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 	begin
 		pc <= 0 ;
 	end
-	
-	// load instruction
-	always @(posedge clk) begin
-		// do something
-		$display("pppppppppppppppppppppppppppppppppp");
-		$display("!!!!! pc : %d ", pc);
+	always @(*) begin
+		$display("!!!!! pc : %d ", pc_out);
+		$display("@@@@pcs : %d %d %d %d %d",pc_in, pc_out, pc_plus_1, pc_plus_imm, pc_jump);
+		$display("@@@@branch, jp, bcond : %d %d %d", branch, jp, bcond);
 		$display("@@@@write_data : %d", write_data);
 		$display("@@@@inst : %b",inst);
 		$display("@@@@alu : %d %d %d ",alu_input_1, alu_input_2,alu_output);
 
+	end
+	// load instruction
+	always @(posedge clk) begin
+		// do something
+		$display("pppppppppppppppppppppppppppppppppp");
+	/*
 		if(reset_n) begin
-			address <= pc;
+			address <= pc_out;
 			readM <= 1;
-		end
+		end*/
+	end
+	// posedge  at pc clock , here comb
+	always @(*) begin
+		address = pc_out;
+		readM = 1;
 	end
 
 	// load data from memory to register
 	always @(negedge clk) begin
 		$display("nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn");
-		$display("@@@@write_data : %d", write_data);
-		$display("@@@@inst : %b",inst);
-		$display("@@@@alu : %d %d %d ",alu_input_1, alu_input_2,alu_output);
-
+	
 		if(mem_read > 0) begin
 			address <= alu_output;
 			readM <= 1;
@@ -214,7 +241,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		// 	pc <= pc + immediate_value +1;
 		// end
 		// else begin
-			pc <= pc+1;
+			//pc <= pc+1;
 		// end
 	end
 /*
@@ -230,6 +257,7 @@ module cpu (readM, writeM, address, data, ackOutput, inputReady, reset_n, clk);
 		`BEQ_OP: bcond = alu_output == 0 ? 1 : 0;  
 		`BGZ_OP: bcond = read1 > 0 ? 1 : 0;
 		`BLZ_OP: bcond = read1 < 0 ? 1 : 0;
+		default : bcond = 0;
 		endcase
 	end
 
@@ -258,26 +286,26 @@ module MUX4(in0, in1,in2, in3, ctrl, out);
 endmodule
 
 
-module PC(PC_in, PC_out, reset_n, clk);
+module PC(pc_in, pc_out, reset_n, clk);
 	input clk;
 	input reset_n;
-	input [`WORD_SIZE-1:0] PC_in;
-	output reg [`WORD_SIZE-1:0] PC_out;
+	input [`WORD_SIZE-1:0] pc_in;
+	output reg [`WORD_SIZE-1:0] pc_out;
 
 	initial begin
-		PC_out = 0;
+		pc_out = -1;
 	end
 	
 	always @(posedge reset_n)
 	begin
-		PC_out <= 0 ;
+		$display("-------------reset----------");
+		pc_out <= -1 ;
 	end
 	
 	always @(posedge clk) 
 	begin
-		PC_out <= PC_in;
+		pc_out <= pc_in;
 	end
 endmodule
-
 
 					  																		  

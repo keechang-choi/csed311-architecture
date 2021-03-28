@@ -10,7 +10,10 @@ output reg mem_write;
 output reg jp;
 output reg branch;
 	wire [3:0] opcode;
+	wire [5:0] funcode;
 	assign opcode = instr[15:12];
+	assign funcode = instr[5:0];
+
 	always @(*)
 	begin
 		if(opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
@@ -21,8 +24,17 @@ output reg branch;
 		else begin
 			alu_src = 0;
 		end
-		if(opcode==`ALU_OP ||opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
- 		opcode==`LWD_OP || opcode==`JAL_OP ||opcode==`JRL_OP) begin
+		if((opcode==`ALU_OP&&funcode==`INST_FUNC_ADD) ||
+		(opcode==`ALU_OP&&funcode==`INST_FUNC_SUB) ||
+		(opcode==`ALU_OP&&funcode==`INST_FUNC_AND) ||
+		(opcode==`ALU_OP&&funcode==`INST_FUNC_ORR) ||
+		(opcode==`ALU_OP&&funcode==`INST_FUNC_NOT) ||
+		(opcode==`ALU_OP&&funcode==`INST_FUNC_TCP) ||
+		(opcode==`ALU_OP&&funcode==`INST_FUNC_SHL) ||
+		(opcode==`ALU_OP&&funcode==`INST_FUNC_SHR) ||
+		opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
+ 		opcode==`LWD_OP || opcode==`JAL_OP ||
+		(opcode==`JRL_OP&& funcode == `INST_FUNC_JRL)) begin
 			reg_write = 1;
 		end
 		else begin
@@ -49,7 +61,8 @@ output reg branch;
 			mem_write = 0;
 		end	
 		if(opcode==`JMP_OP || opcode==`JAL_OP ||
-		opcode==`JPR_OP ||opcode==`JRL_OP) begin
+		(opcode==`JPR_OP && funcode == `INST_FUNC_JPR) ||
+		(opcode==`JRL_OP && funcode == `INST_FUNC_JRL)) begin
 			jp= 1;
 		end
 		else begin
