@@ -26,20 +26,24 @@ module register_file( read_out1, read_out2, read1, read2, write_reg, write_data,
 	end
 	assign read_out1 = registers[read1];
 	assign read_out2 = registers[read2];
+    
 // Is posedge correct?
 	always @(posedge clk) begin
+        if(reg_write) begin
+            registers[write_reg] <= write_data;    
+        end
 		$display("~~~~register write : %d ",write_data);
 		$display("~~~~register : %d %d %d %d",registers[0],registers[1],registers[2],registers[3]);
       
 	end
-    always @(negedge clk ) begin
-	if(reg_write) begin
-            registers[write_reg] <= write_data;    
-        end
-	$display("~~~~register write : %d ",write_data);
-	$display("~~~~register : %d %d %d %d",registers[0],registers[1],registers[2],registers[3]);
+    // always @(negedge clk ) begin
+	// if(reg_write) begin
+    //         registers[write_reg] <= write_data;    
+    //     end
+	// $display("~~~~register write : %d ",write_data);
+	// $display("~~~~register : %d %d %d %d",registers[0],registers[1],registers[2],registers[3]);
       
-    end
+    // end
     
 endmodule
 
