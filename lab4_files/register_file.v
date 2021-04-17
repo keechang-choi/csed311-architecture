@@ -9,5 +9,22 @@ module register_file(read_out1, read_out2, read1, read2, write_reg, write_data, 
     output [15:0] read_out2;
 
     //TODO: implement register file
+    reg [15:0] registers [3:0];
+
+	initial begin
+		registers[0] = 0;
+		registers[1] = 0;
+		registers[2] = 0;
+		registers[3] = 0;
+	end
+	assign read_out1 = registers[read1];
+	assign read_out2 = registers[read2];
+    
+	always @(posedge clk) begin
+        	if(reg_write) begin
+            		registers[write_reg] <= write_data;    
+        	end
+      
+	end
 
 endmodule

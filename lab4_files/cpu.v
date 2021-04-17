@@ -17,6 +17,12 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 	// TODO : implement multi-cycle CPU
 
+	// pc
+	wire [`WORD_SIZE-1:0] pc_in;
+	wire [`WORD_SIZE-1:0] pc_out;
+	wire update_pc;
+
+
 	// register_file input
 	reg [`WORD_SIZE-1:0] write_data;
 	wire [1:0] write_reg;
@@ -35,6 +41,9 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire overflow_flag;
 	wire [`WORD_SIZE-1:0] alu_output;
 
+	// alu_out ouput
+	wire [`WORD_SIZE-1:0] alu_out_output;
+
 	// alu_control_unit input
 	wire [5:0] funct;
 	wire [4:0] opcode;
@@ -43,11 +52,10 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire [3:0] funcCode;
 	wire [1:0] branchType;
 
+	// cpu
 	reg [`WORD_SIZE-1:0] inst;
-	
-	// alu_control_unit
-	assign funct = inst[5:0];
-	assign opcode = inst[15:12];
+	reg [`WORD_SIZE-1:0] mem_data_reg;
+	wire [7:0] immediate_value;
 
 	// control_unit output
 	wire pc_write_cond;
@@ -64,11 +72,94 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire new_inst; 
 	wire reg_write; 
 	wire alu_src_A; 
-	wire alu_src_B; 
+	wire[1:0] alu_src_B; 
 	wire alu_op;
 
+	// cpu
+	assign immediate_value = inst[7:0];
+	assign extended_imm_value = {{8{immediate_value[7]}}, immediate_value[7:0]};
+	assign data = write_m ? read_out2 : 16'bz;
 
 	
+	// alu_control_unit
+	assign funct = inst[5:0];
+	assign opcode = inst[15:12];
+
+	// pc
+	assign update_pc = (bcond && pc_write_cond) || pc_write;
+
+	initial begin
+		bcond = 0;
+		inst = 0;
+		mem_data_reg = 0;
+	end
+
+
+	always @(posedge clk) begin
+		if(mem_read > 0) begin
+			address <= alu_output;
+			read_m <= 1;
+		end
+	end
+
+	always @(posedge clk) begin
+		if(read_m) begin
+			read_m <= 0;
+			if(i_or_d) begin
+				inst <= data;
+			end
+			else begin
+				mem_data_reg <= data;
+			end
+		end
+	end
+
+	always @(posedge clk) begin
+		if(mem_write > 0) begin
+			address <= alu_output;
+			write_m <= 1;
+		end
+	end
+
+	always @(posedge clk) begin
+		if(write_m) begin
+			write_m <= 0;
+		end
+	end
+
+	mux2_1 mux_alu_input1(.sel(alu_src_A),
+						.i1(pc_out),
+						.i2(read_out1),
+						.o(alu_input_2));
+
+	mux4_1 mux_alu_input2(.sel(alu_src_B),
+						.i1(read_out2),
+						.i2(1),
+						.i3(extended_imm_value),
+						.i4(1000),
+						.o(alu_input_2));
+
+	mux2_1 mux_pc_input(.sel(pc_src),
+						.i1(alu_output),
+						.i2(alu_out_output),
+						.o(pc_in));
+	
+	mux2_1 mux_address(.sel(i_or_d),
+					.i1(pc_out),
+					.i2(alu_out_output),
+					.o(address));
+
+	mux2_1 write_data(.sel(mem_to_reg),
+					.i1(alu_out_output),
+					.i2(),
+					.o(wirte_data));
+
+	PC program_counter(.pc_in(pc_in), 
+					.pc_out(pc_out), 
+					.update_pc(update_pc), 
+					.clk(clk), 
+					.reset_n(reset_n));
+
 	register_file register_file_module(
 		.read_out1(read_out1),
 		.read_out2(read_out2),
@@ -93,6 +184,11 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 					.C(alu_output),
 					.overflow_flag(overflow_flag),
 					.bcond(bcond));
+
+	alu_out alu_out_module(.alu_in(alu_output),
+						.alu_out(alu_out_output),
+						.reset_n(reset_n), 
+						.clk(clk));
 
 	control_unit control_unit_module(.pc_write_cond(pc_write_cond),
 									.pc_write(pc_write),
