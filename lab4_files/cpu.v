@@ -1,13 +1,15 @@
 `timescale 1ns/1ns
 `define WORD_SIZE 16    // data and address word size
+`include "opcodes.v"
+
 
 module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, is_halted);
 	input clk;
 	input reset_n;
 	
-	output read_m;
-	output write_m;
-	output [`WORD_SIZE-1:0] address;
+	output reg read_m;
+	output reg write_m;
+	output reg [`WORD_SIZE-1:0] address;
 
 	inout [`WORD_SIZE-1:0] data;
 
@@ -56,6 +58,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	reg [`WORD_SIZE-1:0] inst;
 	reg [`WORD_SIZE-1:0] mem_data_reg;
 	wire [7:0] immediate_value;
+	wire [`WORD_SIZE-1:0] jmp_address;
 
 	// control_unit output
 	wire pc_write_cond;
@@ -79,6 +82,8 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	assign immediate_value = inst[7:0];
 	assign extended_imm_value = {{8{immediate_value[7]}}, immediate_value[7:0]};
 	assign data = write_m ? read_out2 : 16'bz;
+	assign jmp_address = inst[11:0];
+
 
 	
 	// alu_control_unit
@@ -94,6 +99,11 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		mem_data_reg = 0;
 	end
 
+
+	always @(*) begin
+		address = pc_out;
+		readM = 1;
+	end
 
 	always @(posedge clk) begin
 		if(mem_read > 0) begin
@@ -139,9 +149,11 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 						.i4(1000),
 						.o(alu_input_2));
 
-	mux2_1 mux_pc_input(.sel(pc_src),
+	mux2_1 mux_pc_input(.sel({(opcode==`JMP_OP||opcode==`JAL_OP), (pc_src)}),
 						.i1(alu_output),
 						.i2(alu_out_output),
+						.i3(jmp_address),
+						.i4(jmp_address),
 						.o(pc_in));
 	
 	mux2_1 mux_address(.sel(i_or_d),
@@ -149,10 +161,10 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 					.i2(alu_out_output),
 					.o(address));
 
-	mux2_1 write_data(.sel(mem_to_reg),
+	mux2_1 mux_write_data(.sel(mem_to_reg),
 					.i1(alu_out_output),
-					.i2(),
-					.o(wirte_data));
+					.i2(mem_data_reg),
+					.o(write_data));
 
 	PC program_counter(.pc_in(pc_in), 
 					.pc_out(pc_out), 
