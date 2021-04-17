@@ -102,7 +102,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 	always @(*) begin
 		address = pc_out;
-		readM = 1;
+		read_m = 1;
 	end
 
 	always @(posedge clk) begin
