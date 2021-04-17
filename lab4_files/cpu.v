@@ -100,10 +100,10 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	end
 
 
-	always @(*) begin
-		address = pc_out;
-		read_m = 1;
-	end
+	// always @(*) begin
+	// 	address = pc_out;
+	// 	read_m = 1;
+	// end
 
 	always @(posedge clk) begin
 		if(mem_read > 0) begin
@@ -115,12 +115,16 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	always @(posedge clk) begin
 		if(read_m) begin
 			read_m <= 0;
-			if(i_or_d) begin
+			if(ir_write)begin
 				inst <= data;
 			end
-			else begin
-				mem_data_reg <= data;
-			end
+			mem_data_reg <= data;
+			// if(i_or_d) begin
+			// 	inst <= data;
+			// end
+			// else begin
+			// 	mem_data_reg <= data;
+			// end
 		end
 	end
 
@@ -149,7 +153,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 						.i4(1000),
 						.o(alu_input_2));
 
-	mux2_1 mux_pc_input(.sel({(opcode==`JMP_OP||opcode==`JAL_OP), (pc_src)}),
+	mux4_1 mux_pc_input(.sel({(opcode==`JMP_OP||opcode==`JAL_OP), (pc_src)}),
 						.i1(alu_output),
 						.i2(alu_out_output),
 						.i3(jmp_address),
@@ -161,10 +165,19 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 					.i2(alu_out_output),
 					.o(address));
 
-	mux2_1 mux_write_data(.sel(mem_to_reg),
+	mux4_1 mux_write_data(.sel({(pc_to_reg),(mem_to_reg)}),
 					.i1(alu_out_output),
 					.i2(mem_data_reg),
+					.i3(pc_out),
+					.i4(pc_out),
 					.o(write_data));
+
+	mux4_1 mux_write_reg(.sel( {(alu_src_B==2),(pc_to_reg)} ),
+					.i1(inst[7:6]), 
+					.i2(2'b10), 
+					.i3(inst[9:8]), 
+					.i4(inst[9:8]), 
+					.o(write_reg));
 
 	PC program_counter(.pc_in(pc_in), 
 					.pc_out(pc_out), 
