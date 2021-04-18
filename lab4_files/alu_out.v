@@ -1,6 +1,6 @@
 `include "opcodes.v" 	   
 
-module alu_output(alu_in, alu_out, reset_n, clk);
+module alu_out(alu_in, alu_out, reset_n, clk);
 	input clk;
 	input reset_n;
 	input [`WORD_SIZE-1:0] alu_in;

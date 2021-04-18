@@ -47,10 +47,10 @@ module control_unit(opcode, func_code, clk, pc_write_cond, pc_write, i_or_d, mem
 				ir_write <= 1;
 				pc_src <= 0;
 
-				pc_to_reg <= ;
-				halt <= ;
-				wwd <= ;
-				new_inst <= ;
+				// pc_to_reg <= ;
+				// halt <= ;
+				// wwd <= ;
+				// new_inst <= ;
 
 				reg_write <= 0;
 				alu_src_A <= 0; // pc
@@ -70,10 +70,10 @@ module control_unit(opcode, func_code, clk, pc_write_cond, pc_write, i_or_d, mem
 				ir_write <= 0;
 				pc_src <= 0;
 
-				pc_to_reg <= ;
-				halt <= ;
-				wwd <= ;
-				new_inst <= ;
+				// pc_to_reg <= ;
+				// halt <= ;
+				// wwd <= ;
+				// new_inst <= ;
 
 				reg_write <= 0;
 				alu_src_A <= 0; // pc
@@ -83,7 +83,7 @@ module control_unit(opcode, func_code, clk, pc_write_cond, pc_write, i_or_d, mem
 				
 				//case
 				if(opcode==`JAL_OP ||
-				(opcode==`JRL_OP&& funcode == `INST_FUNC_JRL)) begin
+				(opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)) begin
 					state <= s_JL;
 
 				end
@@ -98,10 +98,10 @@ module control_unit(opcode, func_code, clk, pc_write_cond, pc_write, i_or_d, mem
 				else if(opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP) begin
 					state <= s_EXI;
 				end
-				else if(opcode==`WWD_OP && funcode == `INST_FUNC_WWD) begin
+				else if(opcode==`WWD_OP && func_code == `INST_FUNC_WWD) begin
 					state <= s_WWD;
 				end
-				else if(opcode==`HLT_OP && funcode == `INST_FUNC_WWD) begin
+				else if(opcode==`HLT_OP && func_code == `INST_FUNC_WWD) begin
 					state <= s_HLT;
 				end
 				else if((opcode==`LWD_OP ) || (opcode==`SWD_OP )) begin

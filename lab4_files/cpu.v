@@ -13,7 +13,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 	inout [`WORD_SIZE-1:0] data;
 
-	output [`WORD_SIZE-1:0] num_inst;		// number of instruction executed (for testing purpose)
+	output reg [`WORD_SIZE-1:0] num_inst;		// number of instruction executed (for testing purpose)
 	output [`WORD_SIZE-1:0] output_port;	// this will be used for a "WWD" instruction
 	output is_halted;
 
@@ -26,7 +26,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 
 	// register_file input
-	reg [`WORD_SIZE-1:0] write_data;
+	wire [`WORD_SIZE-1:0] write_data;
 	wire [1:0] write_reg;
 	wire [1:0] read1;
 	wire [1:0] read2;
@@ -39,7 +39,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire [`WORD_SIZE-1:0] alu_input_2;
 
 	// alu output
-	reg bcond;
+	wire bcond;
 	wire overflow_flag;
 	wire [`WORD_SIZE-1:0] alu_output;
 
@@ -48,7 +48,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 	// alu_control_unit input
 	wire [5:0] funct;
-	wire [4:0] opcode;
+	wire [3:0] opcode;
 
 	// alu_control_unit output
 	wire [3:0] funcCode;
@@ -59,6 +59,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	reg [`WORD_SIZE-1:0] mem_data_reg;
 	wire [7:0] immediate_value;
 	wire [`WORD_SIZE-1:0] jmp_address;
+	wire [`WORD_SIZE-1:0] address_wire;
 
 	// control_unit output
 	wire pc_write_cond;
@@ -94,9 +95,9 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	assign update_pc = (bcond && pc_write_cond) || pc_write;
 
 	initial begin
-		bcond = 0;
 		inst = 0;
 		mem_data_reg = 0;
+		num_inst = 0;
 	end
 
 
@@ -106,8 +107,10 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	// end
 
 	always @(posedge clk) begin
+		
 		if(mem_read > 0) begin
-			address <= alu_output;
+			$display("address wire %b", address_wire);
+			address <= address_wire;
 			read_m <= 1;
 		end
 	end
@@ -116,7 +119,9 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		if(read_m) begin
 			read_m <= 0;
 			if(ir_write)begin
+				$display("data %b", data);
 				inst <= data;
+				num_inst <= num_inst + 1;
 			end
 			mem_data_reg <= data;
 			// if(i_or_d) begin
@@ -148,9 +153,9 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 	mux4_1 mux_alu_input2(.sel(alu_src_B),
 						.i1(read_out2),
-						.i2(1),
+						.i2(16'b1),
 						.i3(extended_imm_value),
-						.i4(1000),
+						.i4(16'b1),
 						.o(alu_input_2));
 
 	mux4_1 mux_pc_input(.sel({(opcode==`JMP_OP||opcode==`JAL_OP), (pc_src)}),
@@ -163,7 +168,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	mux2_1 mux_address(.sel(i_or_d),
 					.i1(pc_out),
 					.i2(alu_out_output),
-					.o(address));
+					.o(address_wire));
 
 	mux4_1 mux_write_data(.sel({(pc_to_reg),(mem_to_reg)}),
 					.i1(alu_out_output),
@@ -173,10 +178,10 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 					.o(write_data));
 
 	mux4_1 mux_write_reg(.sel( {(alu_src_B==2),(pc_to_reg)} ),
-					.i1(inst[7:6]), 
-					.i2(2'b10), 
-					.i3(inst[9:8]), 
-					.i4(inst[9:8]), 
+					.i1({(14'b0),(inst[7:6])}), 
+					.i2(16'b10), 
+					.i3({(14'b0),(inst[9:8])}), 
+					.i4({(14'b0),(inst[9:8])}), 
 					.o(write_reg));
 
 	PC program_counter(.pc_in(pc_in), 
@@ -215,7 +220,10 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 						.reset_n(reset_n), 
 						.clk(clk));
 
-	control_unit control_unit_module(.pc_write_cond(pc_write_cond),
+	control_unit control_unit_module(.opcode(opcode),
+									.func_code(funcCode),
+									.clk(clk),
+									.pc_write_cond(pc_write_cond),
 									.pc_write(pc_write),
 									.i_or_d(i_or_d),
 									.mem_read(mem_read),
