@@ -157,7 +157,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	mux2_1 mux_alu_input1(.sel(alu_src_A),
 						.i1(pc_out),
 						.i2(read_out1),
-						.o(alu_input_2));
+						.o(alu_input_1));
 
 	mux4_1 mux_alu_input2(.sel(alu_src_B),
 						.i1(read_out2),
@@ -249,11 +249,16 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 									.alu_src_B(alu_src_B), 
 									.alu_op(alu_op));
 	always @(posedge clk) begin
-		#(100/4);
+		//#(100/4);
 		$display("@@@@ pc_out : %d", pc_out);
+		$display("@@@@ pc_in : %d", pc_in);
+		$display("@@@@ pc_update : %d", update_pc);
 		$display("@@@@ addr wire : %d", address_wire);
+		$display("@@@@ addr  : %d", address);
 		$display("@@@@ data : %b", data);
 		$display("@@@@ i_or_d : %d",i_or_d);
 		$display("@@@@ inst : %b", inst);
+		$display("@@@ alu_input_1 : %d", alu_input_1);
+		$display("@@@ alu_input_2 : %d", alu_input_2);
 	end
 endmodule

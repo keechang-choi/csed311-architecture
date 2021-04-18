@@ -33,12 +33,33 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 
 	initial begin
 		//need to reset?? 
+		pc_write_cond <= 0;
+		pc_write <= 1;
+		i_or_d <= 0;
+		mem_read <= 1;
+		mem_to_reg <= 0;
+		mem_write <= 0;
+		ir_write <= 1;
+		pc_src <= 0;
+
+		pc_to_reg <= 0;
+		halt <= 0;
+		wwd <= 0;
+		new_inst <= 1;
+
+		reg_write <= 0;
+		alu_src_A <= 0; // pc
+	 	alu_src_B <= 2'b01;  // 4
+
+		alu_op <= 0 ;
 		state = s_IF;
 	end
 
 	always @(posedge clk) begin
-		//$display("state : %d", state);
+		$display("~~~~~~state : %d", state);
+		$display("~~~~~~opcode : %b", opcode);
 		if(!reset_n) begin
+			
 			state = s_IF;
 		end
 		else begin
@@ -60,7 +81,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 
 				reg_write <= 0;
 				alu_src_A <= 0; // pc
-	 			alu_src_B <= 2'b01;  // 4
+	 			alu_src_B <= 2'b01;  // 1
 
 				alu_op <= 0 ;
 
