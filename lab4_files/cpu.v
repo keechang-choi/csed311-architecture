@@ -70,7 +70,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire mem_write; 
 	wire ir_write; 
 	wire pc_to_reg; 
-	wire pc_src; 
+	wire [1:0] pc_src; 
 	wire halt; 
 	wire wwd; 
 	wire new_inst; 
@@ -113,13 +113,11 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		write_m = mem_write;
 	end*/
 
-	always @(posedge clk) begin
-		
+	always @(*) begin
 		if(mem_read > 0) begin
 			//$display("address wire %b", address_wire);
-			
-			read_m <= 1;
-			write_m <= 0; // b/c memory
+			read_m = 1;
+			write_m = 0; // b/c memory
 		end
 	end
 
@@ -181,11 +179,11 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 						.i4(16'b1),
 						.o(alu_input_2));
 
-	mux4_1 mux_pc_input(.sel({(opcode==`JMP_OP||opcode==`JAL_OP), (pc_src)}),
+	mux4_1 mux_pc_input(.sel(pc_src),
 						.i1(alu_output),
 						.i2(alu_out_output),
 						.i3(jmp_address),
-						.i4(jmp_address),
+						.i4(read_out1),
 						.o(pc_in));
 	
 	mux2_1 mux_address(.sel(i_or_d),
@@ -193,11 +191,11 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 					.i2(alu_out_output),
 					.o(address_wire));
 
-	mux4_1 mux_write_data(.sel({(pc_to_reg),(mem_to_reg)}),
+	mux4_1 mux_write_data(.sel({(pc_to_reg) || (opcode == `LHI_OP),(mem_to_reg) || (opcode == `LHI_OP)}),
 					.i1(alu_out_output),
 					.i2(mem_data_reg),
 					.i3(pc_out),
-					.i4(pc_out),
+					.i4(extended_imm_value<<8),
 					.o(write_data));
 
 	mux4_1 mux_write_reg(.sel( {(alu_src_B==2),(pc_to_reg)} ),
@@ -255,7 +253,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 									.mem_write(mem_write), 
 									.ir_write(ir_write), 
 									.pc_to_reg(pc_to_reg), 
-									.pc_src(pc_src), 
+									.pc_src(pc_src),
 									.halt(halt), 
 									.wwd(wwd), 
 									.new_inst(new_inst), 
@@ -264,7 +262,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 									.alu_src_B(alu_src_B), 
 									.alu_op(alu_op));
 	always @(posedge clk) begin
-		//#(100/4);
+		#(300/4);
 		$display("@@@@ pc_out : %d", pc_out);
 		$display("@@@@ pc_in : %d", pc_in);
 		$display("@@@@ pc_update : %d", update_pc);

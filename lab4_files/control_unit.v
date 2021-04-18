@@ -5,8 +5,8 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
   input [5:0] func_code;
   input clk;
   input reset_n;
-
-  output reg pc_write_cond, pc_write, i_or_d, mem_read, mem_to_reg, mem_write, ir_write, pc_src;
+  output reg pc_write_cond, pc_write, i_or_d, mem_read, mem_to_reg, mem_write, ir_write;
+  output reg [1:0] pc_src;
   //additional control signals. pc_to_reg: to support JAL, JRL. halt: to support HLT. wwd: to support WWD. new_inst: new instruction start
   output reg pc_to_reg, halt, wwd, new_inst;
   output reg [1:0] alu_src_B;
@@ -34,13 +34,13 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 	initial begin
 		//need to reset?? 
 		pc_write_cond <= 0;
-		pc_write <= 1;
+		pc_write <= 0; // not to be 1 after reset
 		i_or_d <= 0;
-		mem_read <= 1;
+		mem_read <= 0; // init for alway @(*)
 		mem_to_reg <= 0;
 		mem_write <= 0;
 		ir_write <= 1;
-		pc_src <= 0;
+		pc_src <= 2'b00;
 
 		pc_to_reg <= 0;
 		halt <= 0;
@@ -72,7 +72,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 1;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -95,7 +95,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -149,7 +149,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -176,7 +176,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -199,7 +199,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 1;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -222,7 +222,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 1;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -245,7 +245,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -268,7 +268,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -290,7 +290,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 1;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -312,7 +312,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 1; // from ALU output register
+				pc_src <= 2'b01; // from ALU output register
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -336,7 +336,13 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_write <= 0;
 				ir_write <= 0;
 				// how to do jpr ??
-				pc_src <= 1; // from ALU register? jmp case : dont care
+				//pc_src <= 1; // from ALU register? jmp case : dont care
+				if(opcode == `JMP_OP) begin
+					pc_src <= 2'b10;
+				end
+				else begin
+					pc_src <= 2'b11;
+				end
 
 				pc_to_reg <= 0;
 				halt <= 0;
@@ -358,8 +364,13 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 1;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 1; // from ALU register? jmp, jpr case : dont care
-
+				//pc_src <= 1; // from ALU register? jmp, jpr case : dont care
+				if(opcode == `JAL_OP) begin
+					pc_src <= 2'b10;
+				end
+				else begin
+					pc_src <= 2'b11;
+				end
 				pc_to_reg <= 1;
 				halt <= 0;
 				wwd <= 0;
@@ -381,7 +392,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 1;
@@ -403,7 +414,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
-				pc_src <= 0;
+				pc_src <= 2'b00;
 
 				pc_to_reg <= 0;
 				halt <= 0;
