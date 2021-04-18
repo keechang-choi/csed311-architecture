@@ -47,10 +47,10 @@ module control_unit(opcode, func_code, clk, pc_write_cond, pc_write, i_or_d, mem
 				ir_write <= 1;
 				pc_src <= 0;
 
-				// pc_to_reg <= ;
-				// halt <= ;
-				// wwd <= ;
-				// new_inst <= ;
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 1;
 
 				reg_write <= 0;
 				alu_src_A <= 0; // pc
@@ -70,14 +70,14 @@ module control_unit(opcode, func_code, clk, pc_write_cond, pc_write, i_or_d, mem
 				ir_write <= 0;
 				pc_src <= 0;
 
-				// pc_to_reg <= ;
-				// halt <= ;
-				// wwd <= ;
-				// new_inst <= ;
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
 
 				reg_write <= 0;
 				alu_src_A <= 0; // pc
-	 			alu_src_B <= 2'b11;  // imm
+	 			alu_src_B <= 2'b10;  // imm
 
 				alu_op <= 0 ;
 				
@@ -115,41 +115,279 @@ module control_unit(opcode, func_code, clk, pc_write_cond, pc_write, i_or_d, mem
 
 			end
 			s_MEMAD : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 0;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 0;
 
-				state <= s_MEMR;
-				state <= s_MEMW;
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 1; 
+	 			alu_src_B <= 2'b10; // imm
+
+				alu_op <= 0 ;
+				if(opcode == `LWD_OP) begin
+					state <= s_MEMR;
+				end
+				else begin
+					state <= s_MEMW;
+				end
 			end
 			s_MEMR : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 1;
+				mem_read <= 1;
+				mem_to_reg <= 0;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 0;
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 0; 
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0 ;
+
 				state <= s_WBM;
 			end
 			s_MEMW : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 1;
+				mem_read <= 0;
+				mem_to_reg <= 0;
+				mem_write <= 1;
+				ir_write <= 0;
+				pc_src <= 0;
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 0; 
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0 ;
+
 				state <= s_IF;
 			end
 			s_WBM : begin
-				state <= s_IF;
-			end
-			s_WBA : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 1;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 0;
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 1;
+				alu_src_A <= 0; 
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0 ;
+
 				state <= s_IF;
 			end
 			s_EXR : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 0;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 0;
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 1; 
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0; // 0 for func
+
 				state <= s_WBA;
 			end
 			s_EXI : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 0;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 0;
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 1; 
+	 			alu_src_B <= 2'b10;
+
+				alu_op <= 1; // alu op for ADI ORI ...
 				state <= s_WBA;
 			end
+			s_WBA : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 1;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 0;
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 1;
+				alu_src_A <= 0; 
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0 ;
+				state <= s_IF;
+			end
 			s_BR : begin
+				pc_write_cond <= 1; // update condition
+				pc_write <= 0;
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 0;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 1; // from ALU output register
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 1; // next PC val is calculated on ID 
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 1; // Branch ALU OP
+
 				state <= s_IF;
 			end
 			s_J : begin
+				pc_write_cond <= 0;
+				pc_write <= 1; // jump write
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 0;
+				mem_write <= 0;
+				ir_write <= 0;
+				// how to do jpr ??
+				pc_src <= 1; // from ALU register? jmp case : dont care
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 0;
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0;
 				state <= s_IF;
 			end
 			s_JL : begin
+				pc_write_cond <= 0;
+				pc_write <= 1; // jump write
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 1;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 1; // from ALU register? jmp, jpr case : dont care
+
+				pc_to_reg <= 1;
+				halt <= 0;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 1;
+				alu_src_A <= 0;
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0;
+
 				state <= s_IF;
 			end
 			s_HLT : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 0;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 0;
+
+				pc_to_reg <= 0;
+				halt <= 1;
+				wwd <= 0;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 0; 
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0 ;
 				state <= s_IF;
 			end
 			s_WWD : begin
+				pc_write_cond <= 0;
+				pc_write <= 0;
+				i_or_d <= 0;
+				mem_read <= 0;
+				mem_to_reg <= 0;
+				mem_write <= 0;
+				ir_write <= 0;
+				pc_src <= 0;
+
+				pc_to_reg <= 0;
+				halt <= 0;
+				wwd <= 1;
+				new_inst <= 0;
+
+				reg_write <= 0;
+				alu_src_A <= 0; 
+	 			alu_src_B <= 2'b00;
+
+				alu_op <= 0 ;
 				state <= s_IF;
 			end
 

@@ -83,7 +83,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	assign immediate_value = inst[7:0];
 	assign extended_imm_value = {{8{immediate_value[7]}}, immediate_value[7:0]};
 	assign data = write_m ? read_out2 : 16'bz;
-	assign jmp_address = inst[11:0];
+	assign jmp_address = {pc_out[15:12], inst[11:0]};
 
 
 	
