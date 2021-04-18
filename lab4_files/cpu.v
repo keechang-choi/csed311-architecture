@@ -117,9 +117,15 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		
 		if(mem_read > 0) begin
 			//$display("address wire %b", address_wire);
-			address <= address_wire;
+			
 			read_m <= 1;
 			write_m <= 0; // b/c memory
+		end
+	end
+
+	always @(*) begin
+		if(mem_read > 0) begin
+			address = address_wire;	
 		end
 	end
 
@@ -128,16 +134,25 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 			read_m <= 0;
 			if(ir_write)begin
 				//$display("data %b", data);
-				inst <= data;
 				num_inst <= num_inst + 1;
 			end
-			mem_data_reg <= data;
+			
 			// if(i_or_d) begin
 			// 	inst <= data;
 			// end
 			// else begin
 			// 	mem_data_reg <= data;
 			// end
+		end
+	end
+	always @(*) begin
+		if(read_m) begin
+			if(ir_write) begin
+				inst = data;
+			end
+			else begin
+				mem_data_reg = data;
+			end
 		end
 	end
 
@@ -253,6 +268,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		$display("@@@@ pc_out : %d", pc_out);
 		$display("@@@@ pc_in : %d", pc_in);
 		$display("@@@@ pc_update : %d", update_pc);
+		$display("@@@@ mem_read : %d", mem_read);
 		$display("@@@@ addr wire : %d", address_wire);
 		$display("@@@@ addr  : %d", address);
 		$display("@@@@ data : %b", data);
