@@ -45,7 +45,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 		pc_to_reg <= 0;
 		halt <= 0;
 		wwd <= 0;
-		new_inst <= 1;
+		new_inst <= 0;
 
 		reg_write <= 0;
 		alu_src_A <= 0; // pc
@@ -79,7 +79,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_to_reg <= 0;
 				halt <= 0;
 				wwd <= 0;
-				new_inst <= 1;
+				new_inst <= 0;
 
 				reg_write <= 0;
 				alu_src_A <= 0; // pc
@@ -122,7 +122,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				else if(opcode==`BNE_OP || opcode==`BEQ_OP ||
 				opcode==`BGZ_OP ||opcode==`BLZ_OP) begin
 					state <= s_BR;
-
+					
 				end
 				else if(opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP) begin
 					state <= s_EXI;
@@ -229,7 +229,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_to_reg <= 0;
 				halt <= 0;
 				wwd <= 0;
-				new_inst <= 0;
+				new_inst <= 1;
 
 				reg_write <= 1;
 				alu_src_A <= 0; 
@@ -289,7 +289,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_write <= 0;
 				i_or_d <= 0;
 				mem_read <= 0;
-				mem_to_reg <= 1;
+				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
 				pc_src <= 2'b00;
@@ -297,13 +297,13 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_to_reg <= 0;
 				halt <= 0;
 				wwd <= 0;
-				new_inst <= 0;
+				new_inst <= 1;
 
 				reg_write <= 1;
-				alu_src_A <= 0; 
+				alu_src_A <= 1; 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 2'b00 ;
+				alu_op <= 2'b00 ; // for next alu ctrl
 				state <= s_IF;
 			end
 			s_BR : begin
@@ -319,7 +319,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_to_reg <= 0;
 				halt <= 0;
 				wwd <= 0;
-				new_inst <= 0;
+				new_inst <= 1;
 
 				reg_write <= 0;
 				alu_src_A <= 1; // next PC val is calculated on ID 
@@ -349,7 +349,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_to_reg <= 0;
 				halt <= 0;
 				wwd <= 0;
-				new_inst <= 0;
+				new_inst <= 1;
 
 				reg_write <= 0;
 				alu_src_A <= 0;
@@ -376,7 +376,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_to_reg <= 1;
 				halt <= 0;
 				wwd <= 0;
-				new_inst <= 0;
+				new_inst <= 1;
 
 				reg_write <= 1;
 				alu_src_A <= 0;
@@ -421,7 +421,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_to_reg <= 0;
 				halt <= 0;
 				wwd <= 1;
-				new_inst <= 0;
+				new_inst <= 1;
 
 				reg_write <= 0;
 				alu_src_A <= 0; 

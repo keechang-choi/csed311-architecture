@@ -26,5 +26,7 @@ module register_file(read_out1, read_out2, read1, read2, write_reg, write_data, 
         	end
       
 	end
-
+	always @(negedge clk) begin
+		$display("!!!!! reg %d, %d, %d, %d", registers[0], registers[1], registers[2], registers[3]);
+	end
 endmodule

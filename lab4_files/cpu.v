@@ -79,6 +79,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire[1:0] alu_src_B; 
 	wire [1:0] alu_op;
 
+	reg [`WORD_SIZE-1:0] output_reg;
 	// cpu
 	assign immediate_value = inst[7:0];
 	assign read1 = inst[11:10];
@@ -115,10 +116,20 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		write_m = mem_write;
 	end*/
 
+	/*
 	mux2_1 mux_wwd(.sel(wwd),
 						.i1(0),
 						.i2(read_out1),
 						.o(output_port));
+	*/
+	assign output_port = output_reg;
+
+	always @(posedge clk) begin
+		if(wwd) begin
+			output_reg <= read_out1;
+		end
+	end
+
 
 	always @(*) begin
 		if(mem_read > 0) begin
@@ -133,14 +144,19 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 			address = address_wire;	
 		end
 	end
+	always @(posedge clk) begin
+		if(new_inst) begin
+			num_inst <= num_inst + 1;
+		end
+	end
 
 	always @(posedge clk) begin
 		if(read_m) begin
 			read_m <= 0;
-			if(ir_write)begin
+			/*if(ir_write)begin
 				//$display("data %b", data);
 				num_inst <= num_inst + 1;
-			end
+			end*/
 			
 			// if(i_or_d) begin
 			// 	inst <= data;
@@ -150,6 +166,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 			// end
 		end
 	end
+
 	always @(*) begin
 		if(read_m) begin
 			if(ir_write) begin
@@ -199,17 +216,17 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 					.o(address_wire));
 
 	mux4_1 mux_write_data(.sel({(pc_to_reg) || (opcode == `LHI_OP),(mem_to_reg) || (opcode == `LHI_OP)}),
-					.i1(alu_out_output),
+					.i1(alu_output),
 					.i2(mem_data_reg),
 					.i3(pc_out),
 					.i4(extended_imm_value<<8),
 					.o(write_data));
-
-	mux4_1 mux_write_reg(.sel( {(alu_src_B==2),(pc_to_reg)} ),
-					.i1({(14'b0),(inst[7:6])}), 
-					.i2(16'b10), 
-					.i3({(14'b0),(inst[9:8])}), 
-					.i4({(14'b0),(inst[9:8])}), 
+	// for loading, mem_to_reg
+	mux4_1 mux_write_reg(.sel( {(alu_src_B==2 || mem_to_reg),(pc_to_reg)} ),
+					.i1(inst[7:6]), 
+					.i2(2'b10), 
+					.i3(read2), 
+					.i4(read2), 
 					.o(write_reg));
 
 	PC program_counter(.pc_in(pc_in), 
@@ -272,19 +289,26 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		#(300/4);
 		$display("@@@@ pc_out : %d", pc_out);
 		$display("@@@@ pc_in : %d", pc_in);
-		$display("@@@ pc_src : %d", pc_src);
-		$display("@@@@ pc_update : %d", update_pc);
-		$display("@@@@ mem_read : %d", mem_read);
-		$display("@@@@ addr wire : %d", address_wire);
+		//$display("@@@ pc_src : %d", pc_src);
+		//$display("@@@@ pc_update : %d", update_pc);
+		//$display("@@@@ mem_read : %d", mem_read);
+		//$display("@@@@ addr wire : %d", address_wire);
 		$display("@@@@ addr  : %d", address);
 		$display("@@@@ data : %b", data);
-		$display("@@@@ i_or_d : %d",i_or_d);
+		//$display("@@@@ i_or_d : %d",i_or_d);
 		$display("@@@@ inst : %b", inst);
 		$display("@@@ alu_input_1 : %d", alu_input_1);
 		$display("@@@ alu_input_2 : %d", alu_input_2);
+		$display("@@@ alu_op : %d", alu_op);
+		$display("@@@ funct : %d", funct);
+		$display("@@@ funcCode : %d", funcCode);
 		$display("@@@ alu_output : %d", alu_output);
 		$display("@@@ alu_out_output : %d", alu_out_output);
 		$display("@@@ wwd : %d", wwd);
 		$display("@@@ read_out1 : %d", read_out1);
+		$display("@@@ output_port: %d", output_port);
+		$display("@@@ write_reg : %d", write_reg);
+		$display("@@@ write_data : %d", write_data);
+		$display("@@@ num_inst : %d", num_inst);
 	end
 endmodule
