@@ -106,12 +106,20 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	// 	read_m = 1;
 	// end
 
+	/*always @(mem_read) begin
+		read_m = mem_read;
+	end
+	always @(mem_write) begin
+		write_m = mem_write;
+	end*/
+
 	always @(posedge clk) begin
 		
 		if(mem_read > 0) begin
-			$display("address wire %b", address_wire);
+			//$display("address wire %b", address_wire);
 			address <= address_wire;
 			read_m <= 1;
+			write_m <= 0; // b/c memory
 		end
 	end
 
@@ -119,7 +127,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		if(read_m) begin
 			read_m <= 0;
 			if(ir_write)begin
-				$display("data %b", data);
+				//$display("data %b", data);
 				inst <= data;
 				num_inst <= num_inst + 1;
 			end
@@ -223,6 +231,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	control_unit control_unit_module(.opcode(opcode),
 									.func_code(funcCode),
 									.clk(clk),
+									.reset_n(reset_n),
 									.pc_write_cond(pc_write_cond),
 									.pc_write(pc_write),
 									.i_or_d(i_or_d),
@@ -239,5 +248,12 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 									.alu_src_A(alu_src_A), 
 									.alu_src_B(alu_src_B), 
 									.alu_op(alu_op));
-
+	always @(posedge clk) begin
+		#(100/4);
+		$display("@@@@ pc_out : %d", pc_out);
+		$display("@@@@ addr wire : %d", address_wire);
+		$display("@@@@ data : %b", data);
+		$display("@@@@ i_or_d : %d",i_or_d);
+		$display("@@@@ inst : %b", inst);
+	end
 endmodule
