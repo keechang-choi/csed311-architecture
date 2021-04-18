@@ -77,10 +77,12 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	wire reg_write; 
 	wire alu_src_A; 
 	wire[1:0] alu_src_B; 
-	wire alu_op;
+	wire [1:0] alu_op;
 
 	// cpu
 	assign immediate_value = inst[7:0];
+	assign read1 = inst[11:10];
+	assign read2 = inst[9:8];
 	assign extended_imm_value = {{8{immediate_value[7]}}, immediate_value[7:0]};
 	assign data = write_m ? read_out2 : 16'bz;
 	assign jmp_address = {pc_out[15:12], inst[11:0]};
@@ -112,6 +114,11 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 	always @(mem_write) begin
 		write_m = mem_write;
 	end*/
+
+	mux2_1 mux_wwd(.sel(wwd),
+						.i1(0),
+						.i2(read_out1),
+						.o(output_port));
 
 	always @(*) begin
 		if(mem_read > 0) begin
@@ -242,7 +249,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 						.clk(clk));
 
 	control_unit control_unit_module(.opcode(opcode),
-									.func_code(funcCode),
+									.func_code(funct),
 									.clk(clk),
 									.reset_n(reset_n),
 									.pc_write_cond(pc_write_cond),
@@ -265,6 +272,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		#(300/4);
 		$display("@@@@ pc_out : %d", pc_out);
 		$display("@@@@ pc_in : %d", pc_in);
+		$display("@@@ pc_src : %d", pc_src);
 		$display("@@@@ pc_update : %d", update_pc);
 		$display("@@@@ mem_read : %d", mem_read);
 		$display("@@@@ addr wire : %d", address_wire);
@@ -274,5 +282,9 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		$display("@@@@ inst : %b", inst);
 		$display("@@@ alu_input_1 : %d", alu_input_1);
 		$display("@@@ alu_input_2 : %d", alu_input_2);
+		$display("@@@ alu_output : %d", alu_output);
+		$display("@@@ alu_out_output : %d", alu_out_output);
+		$display("@@@ wwd : %d", wwd);
+		$display("@@@ read_out1 : %d", read_out1);
 	end
 endmodule

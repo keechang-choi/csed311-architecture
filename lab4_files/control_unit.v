@@ -11,7 +11,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
   output reg pc_to_reg, halt, wwd, new_inst;
   output reg [1:0] alu_src_B;
   output reg  reg_write, alu_src_A;
-  output reg alu_op;
+  output reg [1:0] alu_op;
 
 
    //TODO: implement control unit
@@ -51,16 +51,18 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 		alu_src_A <= 0; // pc
 	 	alu_src_B <= 2'b01;  // 4
 
-		alu_op <= 0 ;
-		state = s_IF;
+		alu_op <= 2'b00 ;
+		state <= s_IF;
 	end
 
 	always @(posedge clk) begin
 		$display("~~~~~~state : %d", state);
 		$display("~~~~~~opcode : %b", opcode);
+		$display("~~~~~~funccode : %b", func_code);
+
 		if(!reset_n) begin
 			
-			state = s_IF;
+			state <= s_IF;
 		end
 		else begin
 		case(state)
@@ -83,7 +85,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0; // pc
 	 			alu_src_B <= 2'b01;  // 1
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 
 				state <= s_ID;
 			end
@@ -106,7 +108,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0; // pc
 	 			alu_src_B <= 2'b10;  // imm
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 				
 				//case
 				if(opcode==`JAL_OP ||
@@ -114,7 +116,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 					state <= s_JL;
 
 				end
-				else if(opcode==`JMP_OP || opcode==`JPR_OP) begin
+				else if(opcode==`JMP_OP || (opcode==`JPR_OP && func_code == `INST_FUNC_JPR)) begin
 					state <= s_J;
 				end
 				else if(opcode==`BNE_OP || opcode==`BEQ_OP ||
@@ -128,7 +130,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				else if(opcode==`WWD_OP && func_code == `INST_FUNC_WWD) begin
 					state <= s_WWD;
 				end
-				else if(opcode==`HLT_OP && func_code == `INST_FUNC_WWD) begin
+				else if(opcode==`HLT_OP && func_code == `INST_FUNC_HLT) begin
 					state <= s_HLT;
 				end
 				else if((opcode==`LWD_OP ) || (opcode==`SWD_OP )) begin
@@ -160,7 +162,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 1; 
 	 			alu_src_B <= 2'b10; // imm
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 				if(opcode == `LWD_OP) begin
 					state <= s_MEMR;
 				end
@@ -187,7 +189,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0; 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 
 				state <= s_WBM;
 			end
@@ -210,7 +212,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0; 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 
 				state <= s_IF;
 			end
@@ -233,7 +235,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0; 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 
 				state <= s_IF;
 			end
@@ -256,7 +258,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 1; 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0; // 0 for func
+				alu_op <= 2'b10 ; // 0 for func
 
 				state <= s_WBA;
 			end
@@ -279,7 +281,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 1; 
 	 			alu_src_B <= 2'b10;
 
-				alu_op <= 1; // alu op for ADI ORI ...
+				alu_op <= 2'b11 ; // alu op for ADI ORI ...
 				state <= s_WBA;
 			end
 			s_WBA : begin
@@ -301,7 +303,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0; 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 				state <= s_IF;
 			end
 			s_BR : begin
@@ -323,7 +325,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 1; // next PC val is calculated on ID 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 1; // Branch ALU OP
+				alu_op <= 2'b11 ; // Branch ALU OP
 
 				state <= s_IF;
 			end
@@ -353,7 +355,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0;
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0;
+				alu_op <= 2'b00 ;
 				state <= s_IF;
 			end
 			s_JL : begin
@@ -380,7 +382,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0;
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0;
+				alu_op <= 2'b00 ;
 
 				state <= s_IF;
 			end
@@ -403,7 +405,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0; 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 				state <= s_IF;
 			end
 			s_WWD : begin
@@ -425,7 +427,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				alu_src_A <= 0; 
 	 			alu_src_B <= 2'b00;
 
-				alu_op <= 0 ;
+				alu_op <= 2'b00 ;
 				state <= s_IF;
 			end
 
