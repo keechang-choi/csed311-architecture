@@ -128,46 +128,30 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		if(wwd) begin
 			output_reg <= read_out1;
 		end
+		if(new_inst) begin
+			num_inst <= num_inst + 1;
+		end
+		if(read_m) begin
+			read_m <= 0;
+		end
+		if(write_m) begin
+			write_m <= 0;
+		end
 	end
 
 
 	always @(*) begin
 		if(mem_read > 0) begin
 			//$display("address wire %b", address_wire);
+			address = address_wire;	
 			read_m = 1;
 			write_m = 0; // b/c memory
 		end
-	end
-
-	always @(*) begin
-		if(mem_read > 0) begin
-			address = address_wire;	
+		if(mem_write > 0) begin
+			address = alu_output;
+			write_m = 1;
+			read_m  = 0;
 		end
-	end
-	always @(posedge clk) begin
-		if(new_inst) begin
-			num_inst <= num_inst + 1;
-		end
-	end
-
-	always @(posedge clk) begin
-		if(read_m) begin
-			read_m <= 0;
-			/*if(ir_write)begin
-				//$display("data %b", data);
-				num_inst <= num_inst + 1;
-			end*/
-			
-			// if(i_or_d) begin
-			// 	inst <= data;
-			// end
-			// else begin
-			// 	mem_data_reg <= data;
-			// end
-		end
-	end
-
-	always @(*) begin
 		if(read_m) begin
 			if(ir_write) begin
 				inst = data;
@@ -176,21 +160,15 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 				mem_data_reg = data;
 			end
 		end
-	end
-
-	always @(posedge clk) begin
-		if(mem_write > 0) begin
-			address <= alu_output;
-			write_m <= 1;
+		if(mem_write ) begin
+			address = alu_output;
+			write_m = 1;
 		end
 	end
 
-	always @(posedge clk) begin
-		if(write_m) begin
-			write_m <= 0;
-		end
-	end
 
+	
+	assign data = write_m ? read_out2 : 16'bz;
 	mux2_1 mux_alu_input1(.sel(alu_src_A),
 						.i1(pc_out),
 						.i2(read_out1),
@@ -200,7 +178,7 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 						.i1(read_out2),
 						.i2(16'b1),
 						.i3(extended_imm_value),
-						.i4(16'b1),
+						.i4({8'b0,immediate_value}),
 						.o(alu_input_2));
 
 	mux4_1 mux_pc_input(.sel(pc_src),
@@ -222,7 +200,8 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 					.i4(extended_imm_value<<8),
 					.o(write_data));
 	// for loading, mem_to_reg
-	mux4_1 mux_write_reg(.sel( {(alu_src_B==2 || mem_to_reg),(pc_to_reg)} ),
+	// 10 11: using imm
+	mux4_1 mux_write_reg(.sel( {(alu_src_B > 1 || mem_to_reg),(pc_to_reg)} ),
 					.i1(inst[7:6]), 
 					.i2(2'b10), 
 					.i3(read2), 
@@ -305,6 +284,8 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		$display("@@@ alu_output : %d", alu_output);
 		$display("@@@ alu_out_output : %d", alu_out_output);
 		$display("@@@ wwd : %d", wwd);
+		$display("@@@ reg1 : %d", read1);
+		$display("@@@ reg2 : %d", read2);
 		$display("@@@ read_out1 : %d", read_out1);
 		$display("@@@ output_port: %d", output_port);
 		$display("@@@ write_reg : %d", write_reg);

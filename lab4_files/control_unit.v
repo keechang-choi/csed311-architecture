@@ -106,8 +106,9 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 
 				reg_write <= 0;
 				alu_src_A <= 0; // pc
-	 			alu_src_B <= 2'b10;  // imm
-
+	 			
+				alu_src_B <= 2'b10;  // sign ex imm
+			
 				alu_op <= 2'b00 ;
 				
 				//case
@@ -206,13 +207,13 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_to_reg <= 0;
 				halt <= 0;
 				wwd <= 0;
-				new_inst <= 0;
+				new_inst <= 1;
 
 				reg_write <= 0;
-				alu_src_A <= 0; 
-	 			alu_src_B <= 2'b00;
+				//alu_src_A <= 0; 
+	 			//alu_src_B <= 2'b00;
 
-				alu_op <= 2'b00 ;
+				//alu_op <= 2'b00 ;
 
 				state <= s_IF;
 			end
@@ -232,10 +233,10 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				new_inst <= 1;
 
 				reg_write <= 1;
-				alu_src_A <= 0; 
-	 			alu_src_B <= 2'b00;
+				//alu_src_A <= 0; 
+	 			//alu_src_B <= 2'b00;
 
-				alu_op <= 2'b00 ;
+				//alu_op <= 2'b00 ;
 
 				state <= s_IF;
 			end
@@ -279,8 +280,12 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 
 				reg_write <= 0;
 				alu_src_A <= 1; 
-	 			alu_src_B <= 2'b10;
-
+				if(opcode == `ADI_OP) begin
+	 				alu_src_B <= 2'b10;
+				end
+				else begin
+					alu_src_B <= 2'b11;
+				end
 				alu_op <= 2'b11 ; // alu op for ADI ORI ...
 				state <= s_WBA;
 			end
@@ -303,7 +308,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				//alu_src_A <= 1; 
 	 			//alu_src_B <= 2'b00;  for using Imm
 
-				alu_op <= 2'b00 ; // for next alu ctrl
+				//alu_op <= 2'b00 ; // for next alu ctrl
 				state <= s_IF;
 			end
 			s_BR : begin
