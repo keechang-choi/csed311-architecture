@@ -368,7 +368,7 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				pc_write <= 1; // jump write
 				i_or_d <= 0;
 				mem_read <= 0;
-				mem_to_reg <= 1;
+				mem_to_reg <= 0;
 				mem_write <= 0;
 				ir_write <= 0;
 				//pc_src <= 1; // from ALU register? jmp, jpr case : dont care

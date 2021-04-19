@@ -141,13 +141,13 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 
 
 	always @(*) begin
-		if(mem_read > 0) begin
+		if(mem_read) begin
 			//$display("address wire %b", address_wire);
 			address = address_wire;	
 			read_m = 1;
 			write_m = 0; // b/c memory
 		end
-		if(mem_write > 0) begin
+		if(mem_write) begin
 			address = alu_output;
 			write_m = 1;
 			read_m  = 0;
@@ -159,10 +159,6 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 			else begin
 				mem_data_reg = data;
 			end
-		end
-		if(mem_write ) begin
-			address = alu_output;
-			write_m = 1;
 		end
 	end
 
@@ -200,12 +196,13 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 					.i4(extended_imm_value<<8),
 					.o(write_data));
 	// for loading, mem_to_reg
-	// 10 11: using imm
+	// srcB 10 11: using imm
+ 	// pc_to_reg : jal jrl -> write_reg=2
 	mux4_1 mux_write_reg(.sel( {(alu_src_B > 1 || mem_to_reg),(pc_to_reg)} ),
 					.i1(inst[7:6]), 
 					.i2(2'b10), 
 					.i3(read2), 
-					.i4(read2), 
+					.i4(2'b10), 
 					.o(write_reg));
 
 	PC program_counter(.pc_in(pc_in), 
@@ -264,12 +261,15 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 									.alu_src_A(alu_src_A), 
 									.alu_src_B(alu_src_B), 
 									.alu_op(alu_op));
+	// display
+/*
 	always @(posedge clk) begin
 		#(300/4);
 		$display("@@@@ pc_out : %d", pc_out);
 		$display("@@@@ pc_in : %d", pc_in);
+		$display("@@@ jmp_address : %d", jmp_address);
 		//$display("@@@ pc_src : %d", pc_src);
-		//$display("@@@@ pc_update : %d", update_pc);
+		$display("@@@@ pc_update : %d", update_pc);
 		//$display("@@@@ mem_read : %d", mem_read);
 		//$display("@@@@ addr wire : %d", address_wire);
 		$display("@@@@ addr  : %d", address);
@@ -292,4 +292,5 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		$display("@@@ write_data : %d", write_data);
 		$display("@@@ num_inst : %d", num_inst);
 	end
+*/
 endmodule
