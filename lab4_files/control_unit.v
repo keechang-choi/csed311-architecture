@@ -300,8 +300,8 @@ module control_unit(opcode, func_code, clk, reset_n, pc_write_cond, pc_write, i_
 				new_inst <= 1;
 
 				reg_write <= 1;
-				alu_src_A <= 1; 
-	 			alu_src_B <= 2'b00;
+				//alu_src_A <= 1; 
+	 			//alu_src_B <= 2'b00;  for using Imm
 
 				alu_op <= 2'b00 ; // for next alu ctrl
 				state <= s_IF;
