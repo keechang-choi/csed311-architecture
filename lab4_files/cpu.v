@@ -293,4 +293,22 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		$display("@@@ num_inst : %d", num_inst);
 	end
 */
+	always @(posedge clk) begin
+		#(300/4);
+		$display("@@@@ pc_out : %d", pc_out);
+		$display("@@@@ pc_in : %d", pc_in);
+		$display("@@@ num_inst : %d", num_inst);
+
+		$display("@@@@ addr  : %d", address);
+		$display("@@@@ data : %b", data);
+		$display("@@@@ inst : %b", inst);
+
+		$display("@@@ wwd : %d", wwd);
+		$display("@@@ output_port: %d", output_port);
+
+		$display("@@@ alu_input_1 : %d", alu_input_1);
+		$display("@@@ alu_input_2 : %d", alu_input_2);
+
+		$display("@@@ alu_output : %d", alu_output);
+	end
 endmodule
