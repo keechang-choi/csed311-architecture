@@ -38,10 +38,10 @@ module alu (A, B, func_code, branch_type, C, overflow_flag, bcond);
 
    always @(*) begin
 		case (branch_type)
-		0: bcond = C == 0 ? 0 : 1; // BNE
-		1: bcond = C == 0 ? 1 : 0; // BEQ
-		2: bcond = A > 0 ? 1 : 0; // BGZ
-		3: bcond = A < 0 ? 1 : 0; // BLZ
+		0: bcond = signed'(C) == 0 ? 0 : 1; // BNE
+		1: bcond = signed'(C) == 0 ? 1 : 0; // BEQ
+		2: bcond = signed'(A) > 0 ? 1 : 0; // BGZ
+		3: bcond = signed'(A) < 0 ? 1 : 0; // BLZ
 		default : bcond = 0;
 		endcase
 	end
