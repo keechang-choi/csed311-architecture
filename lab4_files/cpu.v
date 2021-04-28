@@ -310,5 +310,6 @@ module cpu(clk, reset_n, read_m, write_m, address, data, num_inst, output_port, 
 		$display("@@@ alu_input_2 : %d", alu_input_2);
 
 		$display("@@@ alu_output : %d", alu_output);
+		$display("@@@ bcond : %d", bcond);
 	end
 endmodule

@@ -4,6 +4,7 @@
 `include "control_unit.v" 
 `include "branch_predictor.v"
 `include "hazard.v"
+`include "latch.v"
 
 module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
 
