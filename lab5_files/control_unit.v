@@ -1,8 +1,8 @@
 `include "opcodes.v" 
 
-module control_unit_EX(inst, alu_src_A, alu_src_B, alu_op);
+module control_unit_EX(inst, alu_src_B, alu_op);
 	input [`WORD_SIZE-1:0] inst;
-	output reg alu_src_A;
+	//output reg alu_src_A;
 	output reg alu_src_B;
 	output reg alu_op;
 
@@ -15,10 +15,16 @@ module control_unit_EX(inst, alu_src_A, alu_src_B, alu_op);
 		if(opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
  			opcode==`LWD_OP || opcode==`SWD_OP ||
  			opcode==`BNE_OP || opcode==`BEQ_OP || opcode==`BGZ_OP || opcode==`BLZ_OP ) begin
-				alu_src = 1;
+				alu_src_B = 1;
 		end
 		else begin
-			alu_src = 0;
+			alu_src_B = 0;
+		end
+		if(opcode==`ALU_OP) begin
+			alu_op = 1;
+		end
+		else begin
+			alu_op = 0;
 		end
 	end
 endmodule
@@ -28,23 +34,27 @@ module control_unit_M(inst,  i_or_d, mem_read, mem_write, pc_write_cond, pc_src,
 	output reg i_or_d;
 	output reg mem_read;
 	output reg mem_write;
-	output reg pc_write_cond;
-	output reg pc_src;
-	output reg pc_write;
+	//output reg pc_write_cond;
+	//output reg pc_src;
+	//output reg pc_write;
 
 	wire [3:0] opcode;
 	wire [5:0] funcode;
 	assign opcode = inst[15:12];
 	assign funcode = inst[5:0];
 	always @(*) begin
+		i_or_d = 0;
 		if(opcode==`LWD_OP) begin
 			mem_read = 1;
+			i_or_d = 1;
 		end
 		else begin
 			mem_read = 0;
 		end
+
 		if(opcode==`SWD_OP ) begin
 			mem_write = 1;
+			i_or_d = 1;
 		end
 		else begin
 			mem_write = 0;
@@ -55,7 +65,7 @@ endmodule
 module control_unit_WB(inst, mem_to_reg, reg_write, pc_to_reg);
 	input [`WORD_SIZE-1:0] inst;
 	output reg mem_to_reg;
-	output reg [1:0] reg_write
+	output reg reg_write;
 	output reg pc_to_reg;
 
 	wire [3:0] opcode;
@@ -87,6 +97,13 @@ module control_unit_WB(inst, mem_to_reg, reg_write, pc_to_reg);
 		else begin
 			reg_write = 0;
 		end	
+		if(opcode==`JAL_OP ||
+		(opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)) begin
+			pc_to_reg = 1;
+		end
+		else begin
+			pc_to_reg = 0;
+		end
 	end
 endmodule
 
