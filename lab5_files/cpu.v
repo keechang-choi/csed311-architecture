@@ -21,7 +21,24 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	output [`WORD_SIZE-1:0] output_port;
 	output is_halted;
 
-	//TODO: implement pipelined CPU
+	// TODO: pc input mux;
+	// pc도 datapath 안에 있어야하나?
+
+	// datapath datapath_module(
+	// 	clk(clk), 
+	// 	reset_n(reset_n), 
+	// 	read_m1, 
+	// 	address1, 
+	// 	data1, 
+	// 	read_m2, 
+	// 	write_m2, 
+	// 	address2, 
+	// 	data2, 
+	// 	num_inst, 
+	// 	output_port, 
+	// 	is_halted);
+	
+	
 
 endmodule
 

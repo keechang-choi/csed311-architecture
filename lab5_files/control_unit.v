@@ -109,7 +109,7 @@ endmodule
 
 
 
-module control_unit (inst, clk, reset_n, mem_read, i_or_d, ir_write, halt, wwd, new_inst, inst_out);
+module control_unit (inst, clk, reset_n, mem_read, i_or_d, ir_write, halt, wwd, new_inst);
 
 	//input [3:0] opcode;
 	//input [5:0] func_code;
@@ -122,9 +122,6 @@ module control_unit (inst, clk, reset_n, mem_read, i_or_d, ir_write, halt, wwd, 
   	//additional control signals. pc_to_reg: to support JAL, JRL. halt: to support HLT. wwd: to support WWD. new_inst: new instruction start
   	output reg halt, wwd, new_inst;
 
-	//TODO : implement control unit
-	output reg [`WORD_SIZE-1:0] inst_out;
-
 	wire [3:0] opcode;
 	wire [5:0] funcode;
 	assign opcode = inst[15:12];
@@ -134,7 +131,6 @@ module control_unit (inst, clk, reset_n, mem_read, i_or_d, ir_write, halt, wwd, 
 	end
 
 	always @(posedge clk) begin
-		inst_out <= inst;
 		// mem_read ? 
 		//i_or_d ? 
 		// ir_write ? 
