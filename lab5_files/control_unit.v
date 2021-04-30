@@ -20,6 +20,7 @@ module control_unit_EX(inst, alu_src_B, alu_op);
 		else begin
 			alu_src_B = 0;
 		end
+		// jpr jrl hlt ??? dont need to care ? not using alu ouput
 		if(opcode==`ALU_OP) begin
 			alu_op = 1;
 		end
@@ -62,11 +63,13 @@ module control_unit_M(inst,  i_or_d, mem_read, mem_write, pc_write_cond, pc_src,
 	end
 endmodule
 
-module control_unit_WB(inst, mem_to_reg, reg_write, pc_to_reg);
+module control_unit_WB(inst, mem_to_reg, reg_write, pc_to_reg, is_lhi);
 	input [`WORD_SIZE-1:0] inst;
 	output reg mem_to_reg;
 	output reg reg_write;
 	output reg pc_to_reg;
+	//for write data LHI
+	output reg is_lhi;
 
 	wire [3:0] opcode;
 	wire [5:0] funcode;
@@ -104,6 +107,7 @@ module control_unit_WB(inst, mem_to_reg, reg_write, pc_to_reg);
 		else begin
 			pc_to_reg = 0;
 		end
+		is_lhi = (opcode == `LHI_OP);
 	end
 endmodule
 

@@ -122,21 +122,24 @@ module EXMEM(pc_in, aluout_in, bcond_in, B_in, inst_in, dest_in, pc_out, aluout_
 endmodule
 
 				
-module MEMWB(mdr_in, aluout_in, inst_in, dest_in, mdr_out, aluout_out, inst_out, dest_out, reset_n, clk);
+module MEMWB(pc_in, mdr_in, aluout_in, inst_in, dest_in, pc_out, mdr_out, aluout_out, inst_out, dest_out, reset_n, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
 	input reset_n;
-    input [`WORD_SIZE-1:0] mdr_in;
+	input [`WORD_SIZE-1:0] pc_in;
+    	input [`WORD_SIZE-1:0] mdr_in;
 	input [`WORD_SIZE-1:0] aluout_in;
 	input [`WORD_SIZE-1:0] inst_in;
 	input [1:0] dest_in;
+	output reg [`WORD_SIZE-1:0] pc_out;
 	output reg [`WORD_SIZE-1:0] mdr_out;
-    output reg [`WORD_SIZE-1:0] aluout_out;
+    	output reg [`WORD_SIZE-1:0] aluout_out;
 	output reg [`WORD_SIZE-1:0] inst_out;
 	output reg [1:0] dest_out;
 
 
 	initial begin
+		pc_out = 0;
 		mdr_out = 0;
 		aluout_out = 0;
 		inst_out = 0;
@@ -145,16 +148,18 @@ module MEMWB(mdr_in, aluout_in, inst_in, dest_in, mdr_out, aluout_out, inst_out,
 	
 	always @(posedge reset_n)
 	begin
+		pc_out <= 0;
 		mdr_out <= 0;
-        aluout_out <= 0;
+        	aluout_out <= 0;
 		inst_out <= 0;
 		dest_out <= 0;
 	end
 	
 	always @(posedge clk) 
 	begin
+		pc_out <= pc_in;
 		mdr_out <= mdr_in;
-        aluout_out <= aluout_in;
+        	aluout_out <= aluout_in;
 		inst_out <= inst_in;
 		dest_out <= dest_in;
 	end

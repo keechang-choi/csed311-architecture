@@ -37,6 +37,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire new_inst;
 
 	// IDEX input output
+	wire [1:0] write_reg;
 	wire inst_out_IDEX;
 	wire pc_out_IDEX;
 	wire A_out_IDEX;
@@ -64,6 +65,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	// MEMWB input output
 	wire aluout_out_MEMWB;
+	wire pc_out_MEMWB;
 	wire mdr_out_MEMWB;
 	wire inst_out_MEMWB;
 	wire dest_out_MEMWB:
@@ -72,8 +74,10 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire mem_to_reg; 
 	wire reg_write;
 	wire pc_to_reg;
+	wire is_lhi;
 
 	// register_file input
+
 	wire [`WORD_SIZE-1:0] write_data;
 	wire [1:0] read1;
 	wire [1:0] read2;
@@ -88,6 +92,14 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire bcond;
 	wire overflow_flag;
 
+	// alu_control_unit output
+	wire [3:0] funcCode;
+	wire [1:0] branchType;
+
+	//alu input
+	wire [`WORD_SIZE-1:0] alu_input_2;	
+
+	wire 
 	assign immediate_value = inst_out_IFID[7:0];
 	assign read1 = inst_out_IFID[11:10];
 	assign read2 = inst_out_IFID[9:8];
@@ -126,7 +138,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.pc_in(pc_out_IFID), 
 		.imm_in(extended_immediate_value), 
 		.inst_in(inst_out_IFID), 
-		.dest_in(), // write reg mux로 구해야함
+		.dest_in(write_reg), // write reg mux로 구해야함
 		.A_out(A_out_IDEX), 
 		.B_out(B_out_IDEX), 
 		.pc_out(pc_out_IDEX), 
@@ -139,7 +151,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	control_unit_EX control_unit_EX_module(
 		.inst(inst_out_IDEX), 
 		.alu_src_B(alu_src_B), 
-		.alu_op(alu_src_B));
+		.alu_op(alu_op));
 
 	EXMEM EXMEM_module(
 		.pc_in(pc_out_IDEX), 
@@ -167,10 +179,12 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.pc_write(pc_write));
 
 	MEMWB MEMWB_module(
+		.pc_in(pc_out_EXMEM),
 		.mdr_in(data2), // 확인 필요 
 		.aluout_in(aluout_out_EXMEM), 
 		.inst_in(inst_out_EXMEM),
 		.dest_in(dest_out_EXMEM), 
+		.pc_out(pc_out_MEMWB)
 		.mdr_out(mdr_out_MEMWB), 
 		.aluout_out(aluout_out_MEMWB),
 		.inst_out(inst_out_MEMWB),
@@ -180,27 +194,72 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	control_unit_WB control_unit_WB_module(
 		.inst(inst_out_MEMWB), 
-		.mem_to_reg, 
-		.reg_write, 
-		.pc_to_reg);
+		.mem_to_reg(mem_to_reg),
+		.reg_write(reg_write), 
+		.pc_to_reg(pc_to_reg),
+		.is_lhi(is_lhi));
 
+
+	// to define dest, we need pc_to_reg from control unit.
+	// which is not yet defined IDEX 
 	register_file register_file_module(
 		.read_out1(read_out1),
 		.read_out2(read_out2),
 		.read1(read1),
 		.read2(read2),
-		.dest(dest_out_MEMWB),
+		//.dest(dest_out_MEMWB),
+		.dest(write_reg),
 		.write_data(write_data),
-		.reg_write(reg_write),
+		.reg_write(reg_write),mdr_out_MEMWB
 		.clk(clk));
 
 	immediate_generator immediate_generator_module(
 		.immediate_value(immediate_value),
 		.extended_immediate_value(extended_immediate_value)
 	);
-
 	
+	alu_control_unit alu_control_unit_module(
+		.funct(inst_out_IDEX[5:0]), 
+		.opcode(inst_out_IDEX[15:12]), 
+		.ALUOp(alu_op), 
+		.funcCode(funcCode), 
+		.branchType(branchType));
 
+		
+	mux2_1 mux_alu_input1(
+		.sel(alu_src_B),
+		.i1(B_out_IDEX),
+		.i2(extended_immediate_value_out),
+		.o(alu_input_2));
 
+	alu alu_module(
+		.A(A_out_IDEX), 
+		.B(alu_input_2), 
+		.func_code(funcCode), 
+		.branch_type(branchType), 
+		.alu_out(alu_output), 
+		.overflow_flag(overflow_flag), 
+		.bcond(bcond));
+
+	// for loading, mem_to_reg
+	// srcB 1: using imm
+ 	// pc_to_reg : jal jrl -> write_reg=2
+	mux4_1 mux_write_reg(.sel( {(alu_src_B  || mem_to_reg),(pc_to_reg)} ),
+					.i1(inst_out_IFID[7:6]), 
+					.i2(2'b10), 
+					.i3(inst_out_IFID[9:8]), 
+					.i4(2'b10), 
+					.o(write_reg));
+
+	// 0 : R type alu 
+	// 01 : memory load
+	// 10 : pc 
+	// 11 : is_lhi
+	mux4_1 mux_write_data(.sel({pc_to_reg || is_lhi ,mem_to_reg || is_lhi}),
+					.i1(alu_output_MEMWB),
+					.i2(mdr_out_MEMWB),
+					.i3(pc_out_MEMWB),
+					.i4(extended_imm_value<<8),
+					.o(write_data));
 endmodule
 
