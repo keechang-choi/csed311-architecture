@@ -49,19 +49,40 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire alu_src_B; 
 	wire alu_op;
 
+	// next_pc
+	wire pc_next_in_EXMEM;
+
 	// EXMEM input output
 	wire inst_out_EXMEM;
 	wire pc_out_EXMEM;
+	wire pc_next_out_EXMEM;
 	wire B_out_EXMEM;
 	wire aluout_out_EXMEM;
 	wire bcond_out_EXMEM;
 	wire dest_out_EXMEM:
 
 	// control unit MEM input output
+	wire i_or_d_IDEX;	
+	wire mem_read_IDEX;
+	wire mem_write_IDEX;
+	//wire pc_write_cond_IDEX; 
+	//wire pc_write_IDEX;
+	wire pc_br_IDEX;
+	wire pc_j_IDEX;
+	wire pc_jr_IDEX;
+
+	wire i_or_d;	
+	wire mem_read;
 	wire mem_write;
-	wire pc_write_cond; 
+	//wire pc_write_cond; 
+	//wire pc_write;
+	wire pc_br;
+	wire pc_j;
+	wire pc_jr;
+
+	// computed by bcond, pc_write_cond, pc_write
+	// for pc update
 	wire pc_src; 
-	wire pc_write;
 
 	// MEMWB input output
 	wire aluout_out_MEMWB;
@@ -99,7 +120,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	//alu input
 	wire [`WORD_SIZE-1:0] alu_input_2;	
 
-	wire 
+	wire [`WORD_SIZE-1:0] jmp_address;
+
 	assign immediate_value = inst_out_IFID[7:0];
 	assign read1 = inst_out_IFID[11:10];
 	assign read2 = inst_out_IFID[9:8];
@@ -153,19 +175,30 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.alu_src_B(alu_src_B), 
 		.alu_op(alu_op));
 
+	control_unit_M control_unit_M_IDEX_module(
+		.inst(inst_out_IDEX), 
+		.i_or_d(i_or_d_IDEX), 
+		.mem_read(mem_read_IDEX), 
+		.mem_write(mem_write_IDEX), 
+		.pc_br(pc_br_IDEX), 
+		.pc_j(pc_j_IDEX),
+		.pc_jr(pc_jr_IDEX));
+
 	EXMEM EXMEM_module(
 		.pc_in(pc_out_IDEX), 
 		.aluout_in(alu_output), // alu result, bcond
 		.bcond_in(bcond), // bcond
 		.B_in(B_out_IDEX), 
 		.inst_in(inst_out_IDEX),
-		.dest_int(dest_out_IDEX), 
+		.dest_in(dest_out_IDEX), 
+		.pc_next_in(pc_next_in_EXMEM),
 		.pc_out(pc_out_EXMEM),
 		.bcond_out(bcond_out_EXMEM), 
 		.aluout_out(aluout_out_EXMEM), 
 		.B_out(B_out_EXMEM), 
 		.inst_out(inst_out_EXMEM),
 		.dest_out(dest_out_EXMEM), 
+		.pc_next_out(pc_next_out_EXMEM),
 		.reset_n(reset_n), 
 		.clk(clk));
 	
@@ -174,9 +207,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.i_or_d(i_or_d), 
 		.mem_read(mem_read), 
 		.mem_write(mem_write), 
-		.pc_write_cond(pc_write_cond), 
-		.pc_src(pc_src), 
-		.pc_write(pc_write));
+		.pc_br(pc_br), 
+		.pc_j(pc_j),
+		.pc_jr(pc_jr));
 
 	MEMWB MEMWB_module(
 		.pc_in(pc_out_EXMEM),
@@ -261,5 +294,32 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 					.i3(pc_out_MEMWB),
 					.i4(extended_imm_value<<8),
 					.o(write_data));
+
+	mux4_1 mux_pc_input(.sel(pc_src),
+						.i1(alu_output),
+						.i2(alu_out_output),
+						.i3(jmp_address),
+						.i4(read_out1),
+						.o(pc_in));
+
+	// pc src -> mux : pc in 
+	// 0 : pc+1
+	// 1 : pc_next_out_EXMEM
+	assign pc_src = (bcond_out_EXMEM && pc_br) || pc_j;
+	// pc module
+
+	// pc_next_in_EXMEM
+	assign jmp_address = {pc_out_IDEX[15:12], inst_out_IDEX[11:0]};
+	// pc_br -> not j& not jr -> 01
+	// pc_j & not pc_jr -> not pc_br -> 10
+	// pc_j & pc_jr -> not pc_br -> 11
+	// not pc_j  & not br & not j -> 0 : then we do not use pc_next. ok
+	mux4_1 mux_pc_next(.sel({pc_j,pc_jr||pc_br}),
+			.i1(0),
+			.i2(pc_out_IDEX + {8'b0,extended_immediate_value_out[7:0]}),
+			.i3(jmp_address),
+			.i4(A_out_IDEX),
+			.o(pc_next_in_EXMEM));
+	
 endmodule
 

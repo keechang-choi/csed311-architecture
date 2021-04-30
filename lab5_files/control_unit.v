@@ -30,14 +30,17 @@ module control_unit_EX(inst, alu_src_B, alu_op);
 	end
 endmodule
 
-module control_unit_M(inst,  i_or_d, mem_read, mem_write, pc_write_cond, pc_src, pc_write);
+module control_unit_M(inst,  i_or_d, mem_read, mem_write, pc_br, pc_j, pc_jr);
 	input [`WORD_SIZE-1:0] inst;
 	output reg i_or_d;
 	output reg mem_read;
 	output reg mem_write;
-	//output reg pc_write_cond;
+	// for Branch inst
+	output reg pc_br;
 	//output reg pc_src;
-	//output reg pc_write;
+	// for jump branch
+	output reg pc_j;
+	output reg pc_jr;
 
 	wire [3:0] opcode;
 	wire [5:0] funcode;
