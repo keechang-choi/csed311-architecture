@@ -1,7 +1,8 @@
 `include "opcodes.v" 
 
-module control_unit_EX(inst, alu_src_B, alu_op);
+module control_unit_EX(inst,is_stall, alu_src_B, alu_op);
 	input [`WORD_SIZE-1:0] inst;
+	input is_stall;
 	//output reg alu_src_A;
 	output reg alu_src_B;
 	output reg alu_op;
@@ -30,8 +31,9 @@ module control_unit_EX(inst, alu_src_B, alu_op);
 	end
 endmodule
 
-module control_unit_M(inst,  mem_read, mem_write, pc_br, pc_j, pc_jr);
+module control_unit_M(inst, is_stall, mem_read, mem_write, pc_br, pc_j, pc_jr);
 	input [`WORD_SIZE-1:0] inst;
+	input is_stall;
 	output reg mem_read;
 	output reg mem_write;
 	// for Branch inst
@@ -53,7 +55,7 @@ module control_unit_M(inst,  mem_read, mem_write, pc_br, pc_j, pc_jr);
 			mem_read = 0;
 		end
 
-		if(opcode==`SWD_OP ) begin
+		if(!is_stall && opcode==`SWD_OP ) begin
 			mem_write = 1;
 		end
 		else begin
@@ -82,8 +84,9 @@ module control_unit_M(inst,  mem_read, mem_write, pc_br, pc_j, pc_jr);
 	end
 endmodule
 
-module control_unit_WB(inst, mem_to_reg, reg_write, pc_to_reg, is_lhi);
+module control_unit_WB(inst,is_stall, mem_to_reg, reg_write, pc_to_reg, is_lhi);
 	input [`WORD_SIZE-1:0] inst;
+	input is_stall;
 	output reg mem_to_reg;
 	output reg reg_write;
 	output reg pc_to_reg;
@@ -114,7 +117,12 @@ module control_unit_WB(inst, mem_to_reg, reg_write, pc_to_reg, is_lhi);
 		opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
  		opcode==`LWD_OP || opcode==`JAL_OP ||
 		(opcode==`JRL_OP&& funcode == `INST_FUNC_JRL)) begin
-			reg_write = 1;
+			if(!is_stall) begin
+				reg_write = 1;
+			end
+			else
+				reg_write = 0;
+			end
 		end
 		else begin
 			reg_write = 0;

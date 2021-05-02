@@ -32,6 +32,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire pc_out_IFID;
 	wire isStall_out_IFID;
 
+
+
 	// control unit input output
 	wire i_or_d;
 	wire mem_read;
@@ -49,6 +51,11 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire extended_immediate_value_out;
 	wire dest_out_IDEX:
 	wire isStall_out_IDEX;
+	
+	wire mem_to_reg_IDEX; 
+	wire reg_write_IDEX;
+	wire pc_to_reg_IDEX;
+	wire is_lhi_IDEX;	
 
 	// control unit EX input output
 	wire alu_src_B; 
@@ -158,19 +165,22 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.new_inst(new_inst));
 
 
+
+
+
 	IDEX IDEX_module(
 		.A_in(read_out1), 
 		.B_in(read_out2), 
 		.pc_in(pc_out_IFID), 
 		.imm_in(extended_immediate_value), 
 		.inst_in(inst_out_IFID), 
-		.dest_in(write_reg), // write reg mux로 구해야함
+		//.dest_in(write_reg), // write reg mux로 구해야함
 		.A_out(A_out_IDEX), 
 		.B_out(B_out_IDEX), 
 		.pc_out(pc_out_IDEX), 
 		.imm_out(extended_immediate_value_out), 
 		.inst_out(inst_out_IDEX),
-		.dest_out(dest_out_IDEX), 
+		//.dest_out(dest_out_IDEX), 
 		.reset_n(reset_n), 
 		.clk(clk));
 
@@ -181,12 +191,28 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	control_unit_M control_unit_M_IDEX_module(
 		.inst(inst_out_IDEX), 
-		.i_or_d(i_or_d_IDEX), 
 		.mem_read(mem_read_IDEX), 
 		.mem_write(mem_write_IDEX), 
 		.pc_br(pc_br_IDEX), 
 		.pc_j(pc_j_IDEX),
 		.pc_jr(pc_jr_IDEX));
+
+	//kc add
+	control_unit_WB control_unit_WB_IDEX_module(
+		.inst(inst_out_IDEX), 
+		.mem_to_reg(mem_to_reg_IDEX),
+		.reg_write(reg_write_IDEX), 
+		.pc_to_reg(pc_to_reg_IDEX),
+		.is_lhi(is_lhi_IDEX));
+	// for loading, mem_to_reg
+	// srcB 1: using imm
+ 	// pc_to_reg : jal jrl -> write_reg=2
+	mux4_1 mux_write_reg(.sel( {(alu_src_B  || mem_to_reg_IDEX),(pc_to_reg_IDEX)} ),
+					.i1(inst_out_IDEX[7:6]), 
+					.i2(2'b10), 
+					.i3(inst_out_IDEX[9:8]), 
+					.i4(2'b10), 
+					.o(dest_out_IDEX));
 
 	EXMEM EXMEM_module(
 		.pc_in(pc_out_IDEX), 
@@ -208,7 +234,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	
 	control_unit_M control_unit_M_module(
 		.inst(inst_out_EXMEM), 
-		.i_or_d(i_or_d), 
 		.mem_read(mem_read), 
 		.mem_write(mem_write), 
 		.pc_br(pc_br), 
@@ -278,15 +303,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.overflow_flag(overflow_flag), 
 		.bcond(bcond));
 
-	// for loading, mem_to_reg
-	// srcB 1: using imm
- 	// pc_to_reg : jal jrl -> write_reg=2
-	mux4_1 mux_write_reg(.sel( {(alu_src_B  || mem_to_reg),(pc_to_reg)} ),
-					.i1(inst_out_IFID[7:6]), 
-					.i2(2'b10), 
-					.i3(inst_out_IFID[9:8]), 
-					.i4(2'b10), 
-					.o(write_reg));
+
 
 	// 0 : R type alu 
 	// 01 : memory load
