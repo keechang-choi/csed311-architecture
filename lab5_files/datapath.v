@@ -74,7 +74,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire bcond_out_EXMEM;
 	wire dest_out_EXMEM:
 	wire isStall_out_EXMEM;
-
+	wire reg_write_EXMEM;
 	// control unit MEM input output
 	wire i_or_d_IDEX;	
 	wire mem_read_IDEX;
@@ -137,6 +137,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	wire [`WORD_SIZE-1:0] jmp_address;
 
+	wire dummyControlUnit;
+
 
 	assign immediate_value = inst_out_IFID[7:0];
 	assign read1 = inst_out_IFID[11:10];
@@ -152,7 +154,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_in(data1),  // 확인 필요
 		.inst_out(inst_out_IFID), 
 		.pc_in(address1), // 확인 필요
-		.pc_out(pc_out_IFID), 
+		.pc_out(pc_out_IFID),
+		.isStall_out(isStall_out_IFID), 
 		.reset_n(reset_n), 
 		.clk(clk));
 
@@ -173,13 +176,15 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.B_in(read_out2), 
 		.pc_in(pc_out_IFID), 
 		.imm_in(extended_immediate_value), 
-		.inst_in(inst_out_IFID), 
+		.inst_in(inst_out_IFID),
 		//.dest_in(write_reg), // write reg mux로 구해야함
 		.A_out(A_out_IDEX), 
 		.B_out(B_out_IDEX), 
 		.pc_out(pc_out_IDEX), 
 		.imm_out(extended_immediate_value_out), 
 		.inst_out(inst_out_IDEX),
+		.isStall_in(isStall_out_IFID), 
+		.isStall_out(isStall_out_IDEX),
 		//.dest_out(dest_out_IDEX), 
 		.reset_n(reset_n), 
 		.clk(clk));
@@ -187,12 +192,14 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	control_unit_EX control_unit_EX_module(
 		.inst(inst_out_IDEX), 
 		.alu_src_B(alu_src_B), 
-		.alu_op(alu_op));
+		.alu_op(alu_op),
+		.is_stall(isStall_out_IDEX));
 
 	control_unit_M control_unit_M_IDEX_module(
 		.inst(inst_out_IDEX), 
 		.mem_read(mem_read_IDEX), 
-		.mem_write(mem_write_IDEX), 
+		.mem_write(mem_write_IDEX),
+		.is_stall(isStall_out_IDEX), 
 		.pc_br(pc_br_IDEX), 
 		.pc_j(pc_j_IDEX),
 		.pc_jr(pc_jr_IDEX));
@@ -203,6 +210,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.mem_to_reg(mem_to_reg_IDEX),
 		.reg_write(reg_write_IDEX), 
 		.pc_to_reg(pc_to_reg_IDEX),
+		.is_stall(isStall_out_IDEX),
 		.is_lhi(is_lhi_IDEX));
 	// for loading, mem_to_reg
 	// srcB 1: using imm
@@ -229,16 +237,27 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_out(inst_out_EXMEM),
 		.dest_out(dest_out_EXMEM), 
 		.pc_next_out(pc_next_out_EXMEM),
+		.isStall_in(isStall_out_IDEX),
+		.isStall_out(isStall_out_EXMEM),
 		.reset_n(reset_n), 
 		.clk(clk));
 	
 	control_unit_M control_unit_M_module(
 		.inst(inst_out_EXMEM), 
 		.mem_read(mem_read), 
-		.mem_write(mem_write), 
+		.mem_write(mem_write),
+		.is_stall(isStall_out_EXMEM), 
 		.pc_br(pc_br), 
 		.pc_j(pc_j),
 		.pc_jr(pc_jr));
+	
+	control_unit_WB control_unit_WB_M_module(
+		.inst(inst_out_EXMEM), 
+		.mem_to_reg(dummyControlUnit),
+		.reg_write(reg_write_EXMEM), 
+		.pc_to_reg(dummyControlUnit),
+		.is_stall(dummyControlUnit),
+		.is_lhi(dummyControlUnit));
 
 	MEMWB MEMWB_module(
 		.pc_in(pc_out_EXMEM),
@@ -251,6 +270,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.aluout_out(aluout_out_MEMWB),
 		.inst_out(inst_out_MEMWB),
 		.dest_out(dest_out_MEMWB), 
+		.isStall_in(isStall_out_EXMEM),
+		.isStall_out(isStall_out_MEMWB),
 		.reset_n(reset_n), 
 		.clk(clk));
 
@@ -259,6 +280,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.mem_to_reg(mem_to_reg),
 		.reg_write(reg_write), 
 		.pc_to_reg(pc_to_reg),
+		.is_stall(isStall_out_MEMWB),
 		.is_lhi(is_lhi));
 
 
@@ -335,5 +357,16 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 			.i4(A_out_IDEX),
 			.o(pc_next_in_EXMEM));
 	
+	 hazard_detect hazard_detect_module(
+		 .inst_IFID(inst_out_IFID), 
+		 .rs1(read1), 
+		 .rs2(read2), 
+		 .reg_write_IDEX(reg_write_IDEX), 
+		 .reg_write_EXMEM(reg_write_EXMEM), 
+		 .reg_write_MEMWB(reg_write), 
+		 .rd_IDEX(dest_out_IDEX), 
+		 .rd_EXMEM(dest_out_EXMEM), 
+		 .rd_MEMWB(dest_out_MEMWB), 
+		 .is_stall(isStall));
 endmodule
 
