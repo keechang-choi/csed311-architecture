@@ -30,9 +30,8 @@ module control_unit_EX(inst, alu_src_B, alu_op);
 	end
 endmodule
 
-module control_unit_M(inst,  i_or_d, mem_read, mem_write, pc_br, pc_j, pc_jr);
+module control_unit_M(inst,  mem_read, mem_write, pc_br, pc_j, pc_jr);
 	input [`WORD_SIZE-1:0] inst;
-	output reg i_or_d;
 	output reg mem_read;
 	output reg mem_write;
 	// for Branch inst
@@ -47,10 +46,8 @@ module control_unit_M(inst,  i_or_d, mem_read, mem_write, pc_br, pc_j, pc_jr);
 	assign opcode = inst[15:12];
 	assign funcode = inst[5:0];
 	always @(*) begin
-		i_or_d = 0;
 		if(opcode==`LWD_OP) begin
 			mem_read = 1;
-			i_or_d = 1;
 		end
 		else begin
 			mem_read = 0;
@@ -58,11 +55,30 @@ module control_unit_M(inst,  i_or_d, mem_read, mem_write, pc_br, pc_j, pc_jr);
 
 		if(opcode==`SWD_OP ) begin
 			mem_write = 1;
-			i_or_d = 1;
 		end
 		else begin
 			mem_write = 0;
-		end	
+		end
+		if((opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)
+			|| (opcode==`JPR_OP && func_code == `INST_FUNC_JPR)) begin
+			pc_j = 1;
+			pc_jr = 1;
+		end
+		else if(opcode==`JAL_OP || opcode==`JMP_OP) begin
+			pc_j = 1;
+			pc_jr = 0;
+		end
+		else begin
+			pc_j = 0;
+			pc_jr = 0;
+		end
+		if(opcode==`BNE_OP || opcode==`BEQ_OP ||
+				opcode==`BGZ_OP ||opcode==`BLZ_OP) begin
+			pc_br = 1;
+		end
+		else begin
+			pc_br = 0;
+		end
 	end
 endmodule
 
@@ -116,7 +132,7 @@ endmodule
 
 
 
-module control_unit (inst, clk, reset_n, mem_read, i_or_d, ir_write, halt, wwd, new_inst);
+module control_unit (inst, clk, reset_n, halt, wwd, new_inst);
 
 	//input [3:0] opcode;
 	//input [5:0] func_code;
@@ -124,8 +140,7 @@ module control_unit (inst, clk, reset_n, mem_read, i_or_d, ir_write, halt, wwd, 
 	input clk;
 	input reset_n;
 	
-	output reg mem_read;
-	output reg  i_or_d, ir_write ;
+
   	//additional control signals. pc_to_reg: to support JAL, JRL. halt: to support HLT. wwd: to support WWD. new_inst: new instruction start
   	output reg halt, wwd, new_inst;
 

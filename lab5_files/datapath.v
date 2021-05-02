@@ -295,13 +295,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 					.i4(extended_imm_value<<8),
 					.o(write_data));
 
-	mux4_1 mux_pc_input(.sel(pc_src),
-						.i1(alu_output),
-						.i2(alu_out_output),
-						.i3(jmp_address),
-						.i4(read_out1),
-						.o(pc_in));
-
 	// pc src -> mux : pc in 
 	// 0 : pc+1
 	// 1 : pc_next_out_EXMEM
