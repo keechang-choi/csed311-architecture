@@ -1,10 +1,10 @@
 `include "opcodes.v" 	   
 
-module PC(pc_in, pc_out, update_pc, reset_n, clk);
+module PC(pc_in, pc_out, pc_update, reset_n, clk);
 	input clk;
 	input reset_n;
+	input pc_update;
 	input [`WORD_SIZE-1:0] pc_in;
-    input update_pc;
 	output reg [`WORD_SIZE-1:0] pc_out;
 
 	initial begin
@@ -18,9 +18,9 @@ module PC(pc_in, pc_out, update_pc, reset_n, clk);
 	
 	always @(posedge clk) 
 	begin
-        if(update_pc) begin
-            pc_out <= pc_in;     
-        end
+		if(pc_updata) begin
+			pc_out <= pc_in;     
+		end
 	end
 endmodule
 

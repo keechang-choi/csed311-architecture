@@ -63,7 +63,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	// next_pc
 	wire pc_next_in_EXMEM;
-	
+	wire pc_in;
+	wire pc_out;
+	wire pc_pred;
 
 	// EXMEM input output
 	wire inst_out_EXMEM;
@@ -138,7 +140,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire [`WORD_SIZE-1:0] jmp_address;
 
 	wire dummyControlUnit;
-
+	
+	reg flush_IFID, flush_IDEX;
 
 	assign immediate_value = inst_out_IFID[7:0];
 	assign read1 = inst_out_IFID[11:10];
@@ -154,6 +157,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_in(data1),  // 확인 필요
 		.inst_out(inst_out_IFID), 
 		.pc_in(address1), // 확인 필요
+		.isStall_in(isStall),
 		.pc_out(pc_out_IFID),
 		.isStall_out(isStall_out_IFID), 
 		.reset_n(reset_n), 
@@ -342,7 +346,21 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// 0 : pc+1
 	// 1 : pc_next_out_EXMEM
 	assign pc_src = (bcond_out_EXMEM && pc_br) || pc_j;
+	
+	mux2_1 mux_pc_src(.sel(pc_src),
+			.i1(pc_out+1),
+			.i2(pc_next_out_EXMEM),
+			.o(pc_in)
+			);
 	// pc module
+	PC pc_module(
+		.pc_in(pc_in),
+		.reset_n(reset_n),
+		.pc_update(isStall),
+		.clk(clk),
+		.pc_out(pc_out)
+	);
+
 
 	// pc_next_in_EXMEM
 	assign jmp_address = {pc_out_IDEX[15:12], inst_out_IDEX[11:0]};
@@ -368,5 +386,26 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		 .rd_EXMEM(dest_out_EXMEM), 
 		 .rd_MEMWB(dest_out_MEMWB), 
 		 .is_stall(isStall));
+	branch_predictor branch_predictor_module(
+		.clk(clk), 
+		.reset_n(reset_n), 
+		.PC(pc_out), 
+		.next_PC(pc_pred)
+		);
+	
+	always @(*) begin
+		if(pc_pred != pc_in) begin
+			//IFID
+			//IDEX 
+			//control value -> 0
+			flush_IFID = 1;
+			flush_IDEX = 1;
+		end
+		else begin
+			flush_IFID = 0;
+			flush_IDEX = 0;
+		end
+	end
+
 endmodule
 
