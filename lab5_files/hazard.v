@@ -71,6 +71,9 @@ module hazard_detect(inst_IFID, rs1, rs2, reg_write_IDEX, reg_write_EXMEM, reg_w
 		((rs2 == rd_MEMWB) && use_rs2 && reg_write_MEMWB)) begin
 			is_stall = 1;
 		end
+		else
+			is_stall = 0;
+		end
 	end
 	
 	
