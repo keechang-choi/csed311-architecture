@@ -142,7 +142,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire dummyControlUnit;
 	
 	//flush
-	reg flush_in
+	reg flush_in;
 	wire flush_out_IDEX, flush_out_EXMEM, flush_out_MEMWB;
 
 	assign immediate_value = inst_out_IFID[7:0];

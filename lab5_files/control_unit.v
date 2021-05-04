@@ -159,13 +159,13 @@ endmodule
 
 
 
-module control_unit (inst, clk, reset_n, halt, wwd, new_inst);
+module control_unit (inst, is_stall, is_flush, halt, wwd, new_inst);
 
 	//input [3:0] opcode;
 	//input [5:0] func_code;
 	input [`WORD_SIZE-1:0] inst;
-	input clk;
-	input reset_n;
+	input is_stall;
+	input is_flush;
 	
 
   	//additional control signals. pc_to_reg: to support JAL, JRL. halt: to support HLT. wwd: to support WWD. new_inst: new instruction start
@@ -177,23 +177,31 @@ module control_unit (inst, clk, reset_n, halt, wwd, new_inst);
 	assign funcode = inst[5:0];
 	
 	initial begin
-	end
-
-	always @(posedge clk) begin
-		// mem_read ? 
-		//i_or_d ? 
-		// ir_write ? 
-		//new_inst <= 1;
-		halt <= 0;
-		wwd <= 0;
+		halt = 0;
+		wwd = 0;
+		new_inst = 0;
 	end
 	
 	always @(*) begin
-		if(opcode==`HLT_OP && func_code == `INST_FUNC_HLT) begin
-			halt = 1;
+		if(!is_stall && !is_flush) begin
+			new_inst = 1;
+			if(opcode==`HLT_OP && func_code == `INST_FUNC_HLT) begin
+				halt = 1;
+			end
+			else begin
+				halt = 0;
+			end
+			if(opcode==`WWD_OP && func_code == `INST_FUNC_WWD) begin
+				wwd = 1;
+			end 
+			else
+				wwd = 0;
+			end
 		end
-		if(opcode==`WWD_OP && func_code == `INST_FUNC_WWD) begin
-			wwd = 1;
+		else
+			halt = 0;
+			wwd = 0;
+			new_inst = 0;
 		end
 	end
 endmodule
