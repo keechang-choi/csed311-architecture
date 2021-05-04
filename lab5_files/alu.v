@@ -1,4 +1,5 @@
 `include "opcodes.v" 
+`define NumBits 16
 
 module alu (A, B, func_code, branch_type, alu_out, overflow_flag, bcond);
 

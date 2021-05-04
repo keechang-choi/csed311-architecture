@@ -20,7 +20,7 @@ module branch_predictor(clk, reset_n, PC, next_PC);
 			next_PC <= 0;
 		end
 		else begin
-			nexp_PC = PC + 1;
+			next_PC <= PC + 1;
 		end
 	end
 endmodule

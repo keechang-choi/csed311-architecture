@@ -46,51 +46,51 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 	output reg pc_jr;
 
 	wire [3:0] opcode;
-	wire [5:0] funcode;
+	wire [5:0] func_code;
 	assign opcode = inst[15:12];
-	assign funcode = inst[5:0];
+	assign func_code = inst[5:0];
 	always @(*) begin
 		if(is_flush) begin
 			mem_read = 0;
-			mem_wrtie = 0;
-			pc_br = 0;
-			pc_j = 0;
-			pc_jr = 0;
-		end
-		else
-		if(opcode==`LWD_OP) begin
-			mem_read = 1;
-		end
-		else begin
-			mem_read = 0;
-		end
-
-		if(!is_stall && opcode==`SWD_OP ) begin
-			mem_write = 1;
-		end
-		else begin
 			mem_write = 0;
-		end
-		if((opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)
-			|| (opcode==`JPR_OP && func_code == `INST_FUNC_JPR)) begin
-			pc_j = 1;
-			pc_jr = 1;
-		end
-		else if(opcode==`JAL_OP || opcode==`JMP_OP) begin
-			pc_j = 1;
-			pc_jr = 0;
-		end
-		else begin
+			pc_br = 0;
 			pc_j = 0;
 			pc_jr = 0;
 		end
-		if(opcode==`BNE_OP || opcode==`BEQ_OP ||
-				opcode==`BGZ_OP ||opcode==`BLZ_OP) begin
-			pc_br = 1;
-		end
 		else begin
-			pc_br = 0;
-		end
+			if(opcode==`LWD_OP) begin
+				mem_read = 1;
+			end
+			else begin
+				mem_read = 0;
+			end
+
+			if(!is_stall && opcode==`SWD_OP ) begin
+				mem_write = 1;
+			end
+			else begin
+				mem_write = 0;
+			end
+			if((opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)
+			|| (opcode==`JPR_OP && func_code == `INST_FUNC_JPR)) begin
+				pc_j = 1;
+				pc_jr = 1;
+			end
+			else if(opcode==`JAL_OP || opcode==`JMP_OP) begin
+				pc_j = 1;
+				pc_jr = 0;
+			end
+			else begin
+				pc_j = 0;
+				pc_jr = 0;
+			end
+			if(opcode==`BNE_OP || opcode==`BEQ_OP ||
+				opcode==`BGZ_OP ||opcode==`BLZ_OP) begin
+				pc_br = 1;
+			end
+			else begin
+				pc_br = 0;
+			end
 		end
 	end
 endmodule
@@ -98,6 +98,7 @@ endmodule
 module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg, is_lhi);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
+	input is_flush;
 	output reg mem_to_reg;
 	output reg reg_write;
 	output reg pc_to_reg;
@@ -105,9 +106,9 @@ module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg
 	output reg is_lhi;
 
 	wire [3:0] opcode;
-	wire [5:0] funcode;
+	wire [5:0] func_code;
 	assign opcode = inst[15:12];
-	assign funcode = inst[5:0];
+	assign func_code = inst[5:0];
 
 	always @(*) begin
 		if(is_flush) begin
@@ -124,21 +125,21 @@ module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg
 			mem_to_reg = 0;
 		end
 	
-		if((opcode==`ALU_OP&&funcode==`INST_FUNC_ADD) ||
-		(opcode==`ALU_OP&&funcode==`INST_FUNC_SUB) ||
-		(opcode==`ALU_OP&&funcode==`INST_FUNC_AND) ||
-		(opcode==`ALU_OP&&funcode==`INST_FUNC_ORR) ||
-		(opcode==`ALU_OP&&funcode==`INST_FUNC_NOT) ||
-		(opcode==`ALU_OP&&funcode==`INST_FUNC_TCP) ||
-		(opcode==`ALU_OP&&funcode==`INST_FUNC_SHL) ||
-		(opcode==`ALU_OP&&funcode==`INST_FUNC_SHR) ||
+		if((opcode==`ALU_OP&&func_code==`INST_FUNC_ADD) ||
+		(opcode==`ALU_OP&&func_code==`INST_FUNC_SUB) ||
+		(opcode==`ALU_OP&&func_code==`INST_FUNC_AND) ||
+		(opcode==`ALU_OP&&func_code==`INST_FUNC_ORR) ||
+		(opcode==`ALU_OP&&func_code==`INST_FUNC_NOT) ||
+		(opcode==`ALU_OP&&func_code==`INST_FUNC_TCP) ||
+		(opcode==`ALU_OP&&func_code==`INST_FUNC_SHL) ||
+		(opcode==`ALU_OP&&func_code==`INST_FUNC_SHR) ||
 		opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
  		opcode==`LWD_OP || opcode==`JAL_OP ||
-		(opcode==`JRL_OP&& funcode == `INST_FUNC_JRL)) begin
+		(opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)) begin
 			if(!is_stall) begin
 				reg_write = 1;
 			end
-			else
+			else begin
 				reg_write = 0;
 			end
 		end
@@ -151,7 +152,7 @@ module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg
 		end
 		else begin
 			pc_to_reg = 0;
-		end
+		end begin
 		is_lhi = (opcode == `LHI_OP);
 		end
 	end
@@ -172,9 +173,9 @@ module control_unit (inst, is_stall, is_flush, halt, wwd, new_inst);
   	output reg halt, wwd, new_inst;
 
 	wire [3:0] opcode;
-	wire [5:0] funcode;
+	wire [5:0] func_code;
 	assign opcode = inst[15:12];
-	assign funcode = inst[5:0];
+	assign func_code = inst[5:0];
 	
 	initial begin
 		halt = 0;
@@ -194,11 +195,11 @@ module control_unit (inst, is_stall, is_flush, halt, wwd, new_inst);
 			if(opcode==`WWD_OP && func_code == `INST_FUNC_WWD) begin
 				wwd = 1;
 			end 
-			else
+			else begin
 				wwd = 0;
 			end
 		end
-		else
+		else begin
 			halt = 0;
 			wwd = 0;
 			new_inst = 0;
