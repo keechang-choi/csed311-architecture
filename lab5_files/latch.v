@@ -152,7 +152,7 @@ endmodule
 
 				
 module MEMWB(pc_in, mdr_in, aluout_in, inst_in, dest_in, isStall_in, is_flush_in,
-pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, reset_n, clk);
+pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
 	input reset_n;
@@ -169,7 +169,7 @@ pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, reset_n, clk);
 	output reg [`WORD_SIZE-1:0] inst_out;
 	output reg [1:0] dest_out;
 	output reg isStall_out;
-
+	output reg is_flush_out;
 
 	initial begin
 		pc_out = 0;
