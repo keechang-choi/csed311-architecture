@@ -24,19 +24,19 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	// TODO: pc input mux;
 	// pc도 datapath 안에 있어야하나?
 
-	// datapath datapath_module(
-	// 	clk(clk), 
-	// 	reset_n(reset_n), 
-	// 	read_m1, 
-	// 	address1, 
-	// 	data1, 
-	// 	read_m2, 
-	// 	write_m2, 
-	// 	address2, 
-	// 	data2, 
-	// 	num_inst, 
-	// 	output_port, 
-	// 	is_halted);
+	datapath datapath_module(
+	 	.clk(clk), 
+	 	.reset_n(reset_n), 
+		.read_m1(read_m1), 
+	 	.address1(address1), 
+	 	.data1(data1), 
+	 	.read_m2(read_m2), 
+	 	.write_m2(write_m2), 
+	 	.address2(address2), 
+	 	.data2(data2), 
+	 	.num_inst(num_inst), 
+	 	.output_port(output_port), 
+	 	.is_halted(is_halted));
 	
 	
 

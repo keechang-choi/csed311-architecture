@@ -162,7 +162,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	IFID IFID_module(
 		.inst_in(data1),  // 확인 필요
 		.inst_out(inst_out_IFID), 
-		.pc_in(address1), // 확인 필요
+		.pc_in(pc_out), // 확인 필요
 		.isStall_in(isStall),
 		.pc_out(pc_out_IFID),
 		.isStall_out(isStall_out_IFID), 
@@ -296,8 +296,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	control_unit control_unit_module(
 		.inst(inst_out_MEMWB), 
-		.clk(clk), 
-		.reset_n(reset_n),
 		.is_stall(isStall_out_MEMWB),
 		.is_flush(flush_out_MEMWB),
 		.halt(halt), 
@@ -432,6 +430,14 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 			output_port <= read_out1;
 		end
 	end
+	assign is_halted = halt;
+
+	assign read_m1 = 1;
+	assign address1 = pc_out;
+
+	assign read_m2  = mem_read; 
+	assign write_m2 = mem_write;
+	assign address2 = aluout_out_EXMEM;
 
 endmodule
 
