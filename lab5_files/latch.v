@@ -1,9 +1,11 @@
+`define WORD_SIZE 16
+
 module IFID(inst_in, inst_out, pc_in, isStall_in,  pc_out, isStall_out,  reset_n, clk);
     // TODO: IFID latch를 컨트롤 할 control unit input을 받아야함
 	// inst_in이 IR_in 임
 	input clk;
 	input reset_n;
-    input [`WORD_SIZE-1:0] inst;
+    input [`WORD_SIZE-1:0] inst_in;
 	input [`WORD_SIZE-1:0] pc_in;
 	input isStall_in;
 	output reg [`WORD_SIZE-1:0] pc_out;

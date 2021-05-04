@@ -33,4 +33,5 @@ module immediate_generator(immediate_value, extended_immediate_value);
     input [7:0] immediate_value;
     output [15:0] extended_immediate_value;
     
-    assign extended_immediate_value = {{8{immediate_value[7]}}, extended_immediate_value[7:0]}
+    assign extended_immediate_value = {{8{immediate_value[7]}}, extended_immediate_value[7:0]};
+endmodule
