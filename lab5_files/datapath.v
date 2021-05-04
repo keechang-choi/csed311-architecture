@@ -146,7 +146,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire flush_out_IDEX, flush_out_EXMEM, flush_out_MEMWB;
 
 	assign immediate_value = inst_out_IFID[7:0];
-	assign read1 = inst_out_IFID[11:10];
+	assign read1 = wwd ? inst_out_MEMWB[11:10] :inst_out_IFID[11:10];
 	assign read2 = inst_out_IFID[9:8];
 
 	assign data2 = write_m2 ? B_out_EXMEM : 16'bz;
@@ -154,6 +154,10 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// TODO: register file dest(write_reg) mux
 	// TODO: register file wirte_data mux
 	// TODO: alu, alu control unit
+	initial begin
+		num_inst = 0;
+		output_port = 0;
+	end
 
 	IFID IFID_module(
 		.inst_in(data1),  // 확인 필요
@@ -290,11 +294,12 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.is_flush(flush_out_MEMWB), 
 		.is_lhi(is_lhi));
 
-	module control_unit (inst, is_stall, is_flush, halt, wwd, new_inst);
 	control_unit control_unit_module(
 		.inst(inst_out_MEMWB), 
 		.clk(clk), 
-		.reset_n(reset_n), 
+		.reset_n(reset_n),
+		.is_stall(isStall_out_MEMWB),
+		.is_flush(flush_out_MEMWB),
 		.halt(halt), 
 		.wwd(wwd), 
 		.new_inst(new_inst));
@@ -413,6 +418,18 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		end
 		else begin
 			flush_in = 0;
+		end
+	end
+
+	always @(*) begin
+		if(new_inst)begin
+			num_inst = num_inst+1;
+		end
+	end
+
+	always @(*) begin
+		if(wwd > 0) begin
+			output_port <= read_out1;
 		end
 	end
 
