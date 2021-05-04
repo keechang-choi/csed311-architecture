@@ -49,7 +49,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire A_out_IDEX;
 	wire B_out_IDEX;
 	wire extended_immediate_value_out;
-	wire dest_out_IDEX:
+	wire dest_out_IDEX;
 	wire isStall_out_IDEX;
 	
 	wire mem_to_reg_IDEX; 
@@ -74,7 +74,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire B_out_EXMEM;
 	wire aluout_out_EXMEM;
 	wire bcond_out_EXMEM;
-	wire dest_out_EXMEM:
+	wire dest_out_EXMEM;
 	wire isStall_out_EXMEM;
 	wire reg_write_EXMEM;
 	// control unit MEM input output
@@ -87,8 +87,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire pc_j_IDEX;
 	wire pc_jr_IDEX;
 
-	wire i_or_d;	
-	wire mem_read;
 	wire mem_write;
 	//wire pc_write_cond; 
 	//wire pc_write;
@@ -105,7 +103,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire pc_out_MEMWB;
 	wire mdr_out_MEMWB;
 	wire inst_out_MEMWB;
-	wire dest_out_MEMWB:
+	wire dest_out_MEMWB;
 	wire isStall_out_MEMWB;
 
 	// control unit WB input output
@@ -273,7 +271,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.aluout_in(aluout_out_EXMEM), 
 		.inst_in(inst_out_EXMEM),
 		.dest_in(dest_out_EXMEM), 
-		.pc_out(pc_out_MEMWB)
+		.pc_out(pc_out_MEMWB),
 		.mdr_out(mdr_out_MEMWB), 
 		.aluout_out(aluout_out_MEMWB),
 		.inst_out(inst_out_MEMWB),
