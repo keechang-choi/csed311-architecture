@@ -1,8 +1,9 @@
 `include "opcodes.v" 
 
-module control_unit_EX(inst,is_stall, alu_src_B, alu_op);
+module control_unit_EX(inst,is_stall,is_flush, alu_src_B, alu_op);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
+	input is_flush;
 	//output reg alu_src_A;
 	output reg alu_src_B;
 	output reg alu_op;
@@ -31,9 +32,10 @@ module control_unit_EX(inst,is_stall, alu_src_B, alu_op);
 	end
 endmodule
 
-module control_unit_M(inst, is_stall, mem_read, mem_write, pc_br, pc_j, pc_jr);
+module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j, pc_jr);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
+	input is_flush;
 	output reg mem_read;
 	output reg mem_write;
 	// for Branch inst
@@ -48,6 +50,14 @@ module control_unit_M(inst, is_stall, mem_read, mem_write, pc_br, pc_j, pc_jr);
 	assign opcode = inst[15:12];
 	assign funcode = inst[5:0];
 	always @(*) begin
+		if(is_flush) begin
+			mem_read = 0;
+			mem_wrtie = 0;
+			pc_br = 0;
+			pc_j = 0;
+			pc_jr = 0;
+		end
+		else
 		if(opcode==`LWD_OP) begin
 			mem_read = 1;
 		end
@@ -81,10 +91,11 @@ module control_unit_M(inst, is_stall, mem_read, mem_write, pc_br, pc_j, pc_jr);
 		else begin
 			pc_br = 0;
 		end
+		end
 	end
 endmodule
 
-module control_unit_WB(inst,is_stall, mem_to_reg, reg_write, pc_to_reg, is_lhi);
+module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg, is_lhi);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
 	output reg mem_to_reg;
@@ -99,6 +110,13 @@ module control_unit_WB(inst,is_stall, mem_to_reg, reg_write, pc_to_reg, is_lhi);
 	assign funcode = inst[5:0];
 
 	always @(*) begin
+		if(is_flush) begin
+			mem_to_reg = 0;
+			reg_write = 0;
+			pc_to_reg = 0;
+			is_lhi = 0;
+		end
+		else
 		if(opcode==`LWD_OP ) begin
 			mem_to_reg = 1;
 		end
@@ -135,6 +153,7 @@ module control_unit_WB(inst,is_stall, mem_to_reg, reg_write, pc_to_reg, is_lhi);
 			pc_to_reg = 0;
 		end
 		is_lhi = (opcode == `LHI_OP);
+		end
 	end
 endmodule
 
