@@ -18,7 +18,7 @@ module PC(pc_in, pc_out, pc_update, reset_n, clk);
 	
 	always @(posedge clk) 
 	begin
-		if(pc_updata) begin
+		if(pc_update) begin
 			pc_out <= pc_in;     
 		end
 	end
