@@ -163,14 +163,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.reset_n(reset_n), 
 		.clk(clk));
 
-	control_unit control_unit_module(
-		.inst(inst_out_IFID), 
-		.clk(clk), 
-		.reset_n(reset_n), 
-		.halt(halt), 
-		.wwd(wwd), 
-		.new_inst(new_inst));
-
 
 	IDEX IDEX_module(
 		.A_in(read_out1), 
@@ -289,6 +281,13 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.is_stall(isStall_out_MEMWB),
 		.is_lhi(is_lhi));
 
+	control_unit control_unit_module(
+		.inst(inst_out_MEMWB), 
+		.clk(clk), 
+		.reset_n(reset_n), 
+		.halt(halt), 
+		.wwd(wwd), 
+		.new_inst(new_inst));
 
 	// to define dest, we need pc_to_reg from control unit.
 	// which is not yet defined IDEX 
