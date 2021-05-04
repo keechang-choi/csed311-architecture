@@ -290,6 +290,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.is_flush(flush_out_MEMWB), 
 		.is_lhi(is_lhi));
 
+	module control_unit (inst, is_stall, is_flush, halt, wwd, new_inst);
 	control_unit control_unit_module(
 		.inst(inst_out_MEMWB), 
 		.clk(clk), 
