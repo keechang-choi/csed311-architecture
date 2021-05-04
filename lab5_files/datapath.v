@@ -28,9 +28,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// stall
 	wire isStall;
 	// IFID input output
-	wire inst_out_IFID;
-	wire pc_out_IFID;
-	wire isStall_out_IFID;
+	wire [`WORD_SIZE-1:0] inst_out_IFID;
+	wire [`WORD_SIZE-1:0] pc_out_IFID;
+	wire [`WORD_SIZE-1:0] isStall_out_IFID;
 
 
 
@@ -44,12 +44,12 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	// IDEX input output
 	wire [1:0] write_reg;
-	wire inst_out_IDEX;
-	wire pc_out_IDEX;
-	wire A_out_IDEX;
-	wire B_out_IDEX;
-	wire extended_immediate_value_out;
-	wire dest_out_IDEX;
+	wire [`WORD_SIZE-1:0] inst_out_IDEX;
+	wire [`WORD_SIZE-1:0] pc_out_IDEX;
+	wire [`WORD_SIZE-1:0] A_out_IDEX;
+	wire [`WORD_SIZE-1:0] B_out_IDEX;
+	wire [`WORD_SIZE-1:0] extended_immediate_value_out;
+	wire [1:0] dest_out_IDEX;
 	wire isStall_out_IDEX;
 	
 	wire mem_to_reg_IDEX; 
@@ -62,19 +62,19 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire alu_op;
 
 	// next_pc
-	wire pc_next_in_EXMEM;
-	wire pc_in;
-	wire pc_out;
-	wire pc_pred;
+	wire [`WORD_SIZE-1:0] pc_next_in_EXMEM;
+	wire [`WORD_SIZE-1:0] pc_in;
+	wire [`WORD_SIZE-1:0] pc_out;
+	wire [`WORD_SIZE-1:0] pc_pred;
 
 	// EXMEM input output
-	wire inst_out_EXMEM;
-	wire pc_out_EXMEM;
-	wire pc_next_out_EXMEM;
-	wire B_out_EXMEM;
-	wire aluout_out_EXMEM;
+	wire [`WORD_SIZE-1:0] inst_out_EXMEM;
+	wire [`WORD_SIZE-1:0] pc_out_EXMEM;
+	wire [`WORD_SIZE-1:0] pc_next_out_EXMEM;
+	wire [`WORD_SIZE-1:0] B_out_EXMEM;
+	wire [`WORD_SIZE-1:0] aluout_out_EXMEM;
 	wire bcond_out_EXMEM;
-	wire dest_out_EXMEM;
+	wire [`WORD_SIZE-1:0] dest_out_EXMEM;
 	wire isStall_out_EXMEM;
 	wire reg_write_EXMEM;
 	// control unit MEM input output
@@ -99,11 +99,11 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire pc_src; 
 
 	// MEMWB input output
-	wire aluout_out_MEMWB;
-	wire pc_out_MEMWB;
-	wire mdr_out_MEMWB;
-	wire inst_out_MEMWB;
-	wire dest_out_MEMWB;
+	wire [`WORD_SIZE-1:0] aluout_out_MEMWB;
+	wire [`WORD_SIZE-1:0] pc_out_MEMWB;
+	wire [`WORD_SIZE-1:0] mdr_out_MEMWB;
+	wire [`WORD_SIZE-1:0] inst_out_MEMWB;
+	wire [`WORD_SIZE-1:0] dest_out_MEMWB;
 	wire isStall_out_MEMWB;
 
 	// control unit WB input output
