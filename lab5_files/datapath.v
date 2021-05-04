@@ -141,7 +141,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	wire dummyControlUnit;
 	
-	reg flush_IFID, flush_IDEX;
+	reg flush_in_IDEX, flush_out_IDEX, flush_out_EXMEM;
 
 	assign immediate_value = inst_out_IFID[7:0];
 	assign read1 = inst_out_IFID[11:10];
@@ -172,9 +172,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.new_inst(new_inst));
 
 
-
-
-
 	IDEX IDEX_module(
 		.A_in(read_out1), 
 		.B_in(read_out2), 
@@ -189,6 +186,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_out(inst_out_IDEX),
 		.isStall_in(isStall_out_IFID), 
 		.isStall_out(isStall_out_IDEX),
+		.is_flush_in(flush_in_IDEX),
+		.is_flush_out(flush_out_IDEX),
 		//.dest_out(dest_out_IDEX), 
 		.reset_n(reset_n), 
 		.clk(clk));
@@ -243,6 +242,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.pc_next_out(pc_next_out_EXMEM),
 		.isStall_in(isStall_out_IDEX),
 		.isStall_out(isStall_out_EXMEM),
+		.is_flush_in(flush_out_IDEX || flush_in_IDEX),
+		.is_flush_out(flush_out_EXMEM),
 		.reset_n(reset_n), 
 		.clk(clk));
 	
@@ -276,6 +277,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.dest_out(dest_out_MEMWB), 
 		.isStall_in(isStall_out_EXMEM),
 		.isStall_out(isStall_out_MEMWB),
+		.is_flush_in(flush_out_EXMEM),
 		.reset_n(reset_n), 
 		.clk(clk));
 
@@ -398,12 +400,10 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 			//IFID
 			//IDEX 
 			//control value -> 0
-			flush_IFID = 1;
-			flush_IDEX = 1;
+			flush_in_IDEX = 1;
 		end
 		else begin
-			flush_IFID = 0;
-			flush_IDEX = 0;
+			flush_in_IDEX = 0;
 		end
 	end
 
