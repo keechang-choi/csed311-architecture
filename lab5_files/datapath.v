@@ -67,7 +67,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire [`WORD_SIZE-1:0] pc_in;
 	wire [`WORD_SIZE-1:0] pc_out;
 	wire [`WORD_SIZE-1:0] pc_pred;
-	reg [`WORD_SIZE-1:0] pc_4;
 
 	// EXMEM input output
 	wire [`WORD_SIZE-1:0] inst_out_EXMEM;
@@ -157,7 +156,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	initial begin
 		num_inst = 0;
 		output_port = 0;
-		pc_4 = 0;
 		flush_in = 0;
 	end
 
@@ -165,7 +163,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	begin
 		num_inst = 0;
 		output_port = 0;
-		pc_4 <= 0;
 		flush_in <= 0;
 	end
 
@@ -371,7 +368,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	assign pc_src = (bcond_out_EXMEM && pc_br) || pc_j;
 	
 	mux2_1 mux_pc_src(.sel(pc_src),
-			.i1(pc_4),
+			.i1(pc_out+1),
 			.i2(pc_next_out_EXMEM),
 			.o(pc_in)
 			);
@@ -416,14 +413,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.next_PC(pc_pred)
 		);
 
-	always @(posedge clk) begin
-		pc_4 = pc_out + 1;
-	end
 	
 	always @(*) begin
-		$display("@@@ inner pc_in : %b", pc_in);
-		$display("@@@ inner pc_pred : %b", pc_pred);
-		if(pc_pred != pc_in) begin
+		if(pc_pred != pc_out) begin
 			//IFID
 			//IDEX 
 			//control value -> 0
@@ -455,7 +447,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	assign address2 = aluout_out_EXMEM;
 
 	always @(posedge clk) begin
-		#(300/4);
+		#(100/4);
+		$display("========================");
 		$display("@@@@ data1 : %b", data1);
 		$display("@@@@ inst_out_IFID : %b", inst_out_IFID);
 		$display("@@@@ inst_out_IDEX : %b", inst_out_IDEX);
@@ -473,6 +466,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@ pc_next_out_EXMEM : %b", pc_next_out_EXMEM);
 		$display("@@@ pc_src : %b", pc_src);
 		$display("@@@ flush : %b", flush_in);
+		$display("@@@ write data : %b", write_data);
+		$display("@@@ is_lhi: %b", is_lhi);
 
 		
 	end
