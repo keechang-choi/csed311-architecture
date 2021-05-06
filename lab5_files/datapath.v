@@ -1,3 +1,4 @@
+`timescale 1ns/1ns
 `include "opcodes.v"
 `include "register_file.v" 
 `include "alu.v"
@@ -66,6 +67,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire [`WORD_SIZE-1:0] pc_in;
 	wire [`WORD_SIZE-1:0] pc_out;
 	wire [`WORD_SIZE-1:0] pc_pred;
+	reg [`WORD_SIZE-1:0] pc_4;
 
 	// EXMEM input output
 	wire [`WORD_SIZE-1:0] inst_out_EXMEM;
@@ -155,6 +157,16 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	initial begin
 		num_inst = 0;
 		output_port = 0;
+		pc_4 = 0;
+		flush_in = 0;
+	end
+
+	always @(posedge reset_n)
+	begin
+		num_inst = 0;
+		output_port = 0;
+		pc_4 <= 0;
+		flush_in <= 0;
 	end
 
 	IFID IFID_module(
@@ -225,20 +237,18 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 					.o(dest_out_IDEX));
 
 	EXMEM EXMEM_module(
-		.pc_in(pc_out_IDEX), 
+		.pc_in(pc_next_in_EXMEM), 
 		.aluout_in(alu_output), // alu result, bcond
 		.bcond_in(bcond), // bcond
 		.B_in(B_out_IDEX), 
 		.inst_in(inst_out_IDEX),
 		.dest_in(dest_out_IDEX), 
-		.pc_next_in(pc_next_in_EXMEM),
-		.pc_out(pc_out_EXMEM),
+		.pc_out(pc_next_out_EXMEM),
 		.bcond_out(bcond_out_EXMEM), 
 		.aluout_out(aluout_out_EXMEM), 
 		.B_out(B_out_EXMEM), 
 		.inst_out(inst_out_EXMEM),
 		.dest_out(dest_out_EXMEM), 
-		.pc_next_out(pc_next_out_EXMEM),
 		.isStall_in(isStall_out_IDEX),
 		.isStall_out(isStall_out_EXMEM),
 		.is_flush_in(flush_out_IDEX || flush_in),
@@ -361,7 +371,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	assign pc_src = (bcond_out_EXMEM && pc_br) || pc_j;
 	
 	mux2_1 mux_pc_src(.sel(pc_src),
-			.i1(pc_out+1),
+			.i1(pc_4),
 			.i2(pc_next_out_EXMEM),
 			.o(pc_in)
 			);
@@ -369,7 +379,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	PC pc_module(
 		.pc_in(pc_in),
 		.reset_n(reset_n),
-		.pc_update(isStall),
+		.pc_update(!isStall),
 		.clk(clk),
 		.pc_out(pc_out)
 	);
@@ -405,8 +415,14 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.PC(pc_out), 
 		.next_PC(pc_pred)
 		);
+
+	always @(posedge clk) begin
+		pc_4 = pc_out + 1;
+	end
 	
 	always @(*) begin
+		$display("@@@ inner pc_in : %b", pc_in);
+		$display("@@@ inner pc_pred : %b", pc_pred);
 		if(pc_pred != pc_in) begin
 			//IFID
 			//IDEX 
@@ -438,5 +454,27 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	assign write_m2 = mem_write;
 	assign address2 = aluout_out_EXMEM;
 
+	always @(posedge clk) begin
+		#(300/4);
+		$display("@@@@ data1 : %b", data1);
+		$display("@@@@ inst_out_IFID : %b", inst_out_IFID);
+		$display("@@@@ inst_out_IDEX : %b", inst_out_IDEX);
+		$display("@@@@ inst_out_EXMEM : %b", inst_out_EXMEM);
+		$display("@@@@ inst_out_MEMWB : %b", inst_out_MEMWB);
+		$display("@@@ num_inst : %d", num_inst);
+		$display("@@@ address1 : %b", address1);
+		$display("@@@ address2 : %b", address2);
+
+		$display("@@@ pc_in : %b", pc_in);
+		$display("@@@ pc_out : %b", pc_out);
+		$display("@@@ pc_pred : %b", pc_pred);
+		$display("@@@ isStall : %b", isStall);
+		$display("@@@ pc_next_in_EXMEM : %b", pc_next_in_EXMEM);
+		$display("@@@ pc_next_out_EXMEM : %b", pc_next_out_EXMEM);
+		$display("@@@ pc_src : %b", pc_src);
+		$display("@@@ flush : %b", flush_in);
+
+		
+	end
 endmodule
 

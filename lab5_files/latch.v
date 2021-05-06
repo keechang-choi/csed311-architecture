@@ -87,18 +87,17 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in,
 endmodule
 
 				
-module EXMEM(pc_in, aluout_in, bcond_in, B_in, inst_in, dest_in,pc_next_in, isStall_in, is_flush_in,
-pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, pc_next_out, isStall_out, is_flush_out, reset_n, clk);
+module EXMEM(pc_in, aluout_in, bcond_in, B_in, inst_in, dest_in, isStall_in, is_flush_in,
+pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
 	input reset_n;
-    	input [`WORD_SIZE-1:0] pc_in;
+    input [`WORD_SIZE-1:0] pc_in;
 	input [`WORD_SIZE-1:0] aluout_in;
 	input [`WORD_SIZE-1:0] B_in;
 	input [`WORD_SIZE-1:0] inst_in;
 	input bcond_in;
 	input [1:0] dest_in;
-	input [`WORD_SIZE-1:0] pc_next_in;
 	input isStall_in;
 	input is_flush_in;
 
@@ -108,7 +107,6 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, pc_next_out, isStall_o
     output reg [`WORD_SIZE-1:0] inst_out;
 	output reg bcond_out;
 	output reg [1:0] dest_out;
-	output reg [`WORD_SIZE-1:0] pc_next_out;
 	output reg isStall_out;
 	output reg is_flush_out;
 	initial begin
