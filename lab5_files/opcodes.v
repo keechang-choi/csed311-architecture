@@ -16,6 +16,7 @@
 `define	JRL_OP	4'd15
 `define HLT_OP 	4'd15
 `define WWD_OP 	4'd15
+`define NOP_OP  4'd11
 
 // ALU Function Codes
 `define	FUNC_ADD	3'b000

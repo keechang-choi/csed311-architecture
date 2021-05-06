@@ -1,33 +1,35 @@
 `define WORD_SIZE 16
+`include "opcodes.v"
 
 module IFID(inst_in, inst_out, pc_in, isStall_in,  pc_out, isStall_out,  reset_n, clk);
     // TODO: IFID latch를 컨트롤 할 control unit input을 받아야함
 	// inst_in이 IR_in 임
 	input clk;
 	input reset_n;
-    input [`WORD_SIZE-1:0] inst_in;
+    	input [`WORD_SIZE-1:0] inst_in;
 	input [`WORD_SIZE-1:0] pc_in;
 	input isStall_in;
 	output reg [`WORD_SIZE-1:0] pc_out;
-    output reg [`WORD_SIZE-1:0] inst_out;
+    	output reg [`WORD_SIZE-1:0] inst_out;
 	output reg isStall_out;
 
 	initial begin
-        inst_out = 0;
+
+        	inst_out = 0;
 		pc_out = 0;
 		isStall_out = 0;
 	end
 	
 	always @(posedge reset_n)
 	begin
-        inst_out <= 0;
+		inst_out <= {`NOP_OP,12'b0};
 		pc_out <= 0 ;
 		isStall_out <= 0;
 	end
 	
 	always @(posedge clk) 
 	begin
-        pc_out <= pc_in;
+        	pc_out <= pc_in;
 		inst_out <= inst_in;
 		isStall_out <= isStall_in;    
 	end
@@ -39,7 +41,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in,
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
 	input reset_n;
-    input [`WORD_SIZE-1:0] A_in;
+    	input [`WORD_SIZE-1:0] A_in;
 	input [`WORD_SIZE-1:0] B_in;
 	input [`WORD_SIZE-1:0] pc_in;
 	input [`WORD_SIZE-1:0] inst_in;
@@ -68,7 +70,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in,
 		A_out <= 0;
 		B_out <= 0;
 		imm_out <=0;
-        inst_out <= 0;
+		inst_out <= {`NOP_OP,12'b0};
 		pc_out <= 0 ;
 		isStall_out <= 0;
 		is_flush_out <= 0;
@@ -79,7 +81,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in,
 		A_out <= A_in;
 		B_out <= B_in;
 		imm_out <= imm_in;
-        pc_out <= pc_in;
+        	pc_out <= pc_in;
 		inst_out <= inst_in;
 		isStall_out <= isStall_in;
 		is_flush_out <= is_flush_in;    
@@ -113,7 +115,7 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 		pc_out = 0;
 		aluout_out = 0;
 		B_out = 0;
-        inst_out = 0;
+        	inst_out = 0;
 		bcond_out = 0;
 		dest_out = 0;
 		isStall_out = 0;
@@ -125,7 +127,7 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 		pc_out <= 0;
 		aluout_out <= 0;
 		B_out <= 0;
-        inst_out <= 0;
+		inst_out <= {`NOP_OP,12'b0};
 		bcond_out <= 0;
 		dest_out <= 0;
 		isStall_out <= 0;
@@ -137,7 +139,7 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 		pc_out <= pc_in;
 		aluout_out <= aluout_in;
 		B_out <= B_in;
-        inst_out <= inst_in;    
+       		inst_out <= inst_in;    
 		bcond_out <= bcond_in;
 		dest_out <= dest_in;
 		isStall_out <= isStall_in;
@@ -180,8 +182,8 @@ pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_out, rese
 	begin
 		pc_out <= 0;
 		mdr_out <= 0;
-        aluout_out <= 0;
-		inst_out <= 0;
+        	aluout_out <= 0;
+		inst_out <= {`NOP_OP,12'b0};
 		dest_out <= 0;
 		isStall_out <= 0;
 		is_flush_out <= 0;

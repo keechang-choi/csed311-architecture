@@ -161,9 +161,10 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	always @(posedge reset_n)
 	begin
-		num_inst = 0;
-		output_port = 0;
+		num_inst <= 0;
+		output_port <= 0;
 		flush_in <= 0;
+		
 	end
 
 	IFID IFID_module(
@@ -426,17 +427,18 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		end
 	end
 
-	always @(*) begin
-		if(new_inst)begin
-			num_inst = num_inst+1;
+	always @(posedge clk) begin
+		if(reset_n) begin
+			
 		end
-	end
-
-	always @(*) begin
-		if(wwd > 0) begin
+		if(new_inst)begin
+			num_inst <= num_inst+1;
+		end
+		if(wwd) begin
 			output_port <= read_out1;
 		end
 	end
+
 	assign is_halted = halt;
 
 	assign read_m1 = 1;
@@ -446,30 +448,47 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	assign write_m2 = mem_write;
 	assign address2 = aluout_out_EXMEM;
 
+	
 	always @(posedge clk) begin
 		#(100/4);
 		$display("========================");
 		$display("@@@@ data1 : %b", data1);
-		$display("@@@@ inst_out_IFID : %b", inst_out_IFID);
-		$display("@@@@ inst_out_IDEX : %b", inst_out_IDEX);
-		$display("@@@@ inst_out_EXMEM : %b", inst_out_EXMEM);
-		$display("@@@@ inst_out_MEMWB : %b", inst_out_MEMWB);
-		$display("@@@ num_inst : %d", num_inst);
-		$display("@@@ address1 : %b", address1);
-		$display("@@@ address2 : %b", address2);
+		$display("@@@@    inst_out_IFID : %b", inst_out_IFID);
+		$display("@@@@ isStall_out_IFID : %d", isStall_out_IFID);		
+		$display("@@@          flush_in : %b", flush_in);
+
+		$display("@@@@    inst_out_IDEX : %b", inst_out_IDEX);
+		$display("@@@@ isStall_out_IDEX : %d", isStall_out_IDEX);	
+		$display("@@@@   flush_out_IDEX : %d", flush_out_IDEX);		
+
+		$display("@@@@    inst_out_EXMEM : %b", inst_out_EXMEM);
+		$display("@@@@ isStall_out_EXMEM : %d", isStall_out_EXMEM);	
+		$display("@@@@   flush_out_EXMEM : %d", flush_out_EXMEM);	
+
+		$display("@@@@    inst_out_MEMWB : %b", inst_out_MEMWB);
+		$display("@@@@ isStall_out_MEMWB : %d", isStall_out_MEMWB);	
+		$display("@@@@   flush_out_MEMWB : %d", flush_out_MEMWB);	
+
+		//$display("@@@ address1 : %b", address1);
+		//$display("@@@ address2 : %b", address2);
 
 		$display("@@@ pc_in : %b", pc_in);
 		$display("@@@ pc_out : %b", pc_out);
 		$display("@@@ pc_pred : %b", pc_pred);
-		$display("@@@ isStall : %b", isStall);
-		$display("@@@ pc_next_in_EXMEM : %b", pc_next_in_EXMEM);
+		//$display("@@@ isStall : %b", isStall);
+		//$display("@@@ pc_next_in_EXMEM : %b", pc_next_in_EXMEM);
 		$display("@@@ pc_next_out_EXMEM : %b", pc_next_out_EXMEM);
 		$display("@@@ pc_src : %b", pc_src);
-		$display("@@@ flush : %b", flush_in);
-		$display("@@@ write data : %b", write_data);
-		$display("@@@ is_lhi: %b", is_lhi);
 
+		//$display("@@@ write data : %b", write_data);
+		//$display("@@@ is_lhi: %b", is_lhi);
+
+		$display("@@@ num_inst : %d", num_inst);
+		$display("@@@@   new_inst : %d", new_inst);	
+		$display("@@@@   wwd : %d", wwd);	
+		$display("@@@@   output_port : %d", output_port);	
 		
 	end
+
 endmodule
 
