@@ -184,6 +184,11 @@ module control_unit (inst, is_stall, is_flush, halt, wwd, new_inst);
 	end
 	
 	always @(*) begin
+		if(new_inst)begin
+			new_inst = 0;
+		end
+	end
+	always @(*) begin
 		if(!is_stall && !is_flush) begin
 			new_inst = 1;
 			if(opcode==`HLT_OP && func_code == `INST_FUNC_HLT) begin
