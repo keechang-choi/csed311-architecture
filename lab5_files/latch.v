@@ -1,7 +1,7 @@
 `define WORD_SIZE 16
 `include "opcodes.v"
 
-module IFID(inst_in, inst_out, pc_in, isStall_in,  pc_out, isStall_out,  reset_n, clk);
+module IFID(inst_in, inst_out, pc_in, isStall_in,flush_on,is_flush_in, is_flush_out,  pc_out, isStall_out,  reset_n, clk);
     // TODO: IFID latch를 컨트롤 할 control unit input을 받아야함
 	// inst_in이 IR_in 임
 	input clk;
@@ -9,15 +9,19 @@ module IFID(inst_in, inst_out, pc_in, isStall_in,  pc_out, isStall_out,  reset_n
     	input [`WORD_SIZE-1:0] inst_in;
 	input [`WORD_SIZE-1:0] pc_in;
 	input isStall_in;
+	input is_flush_in;
+	input flush_on;
 	output reg [`WORD_SIZE-1:0] pc_out;
     	output reg [`WORD_SIZE-1:0] inst_out;
 	output reg isStall_out;
+	output reg is_flush_out;
 
 	initial begin
 
         	inst_out = 0;
 		pc_out = 0;
 		isStall_out = 0;
+		is_flush_out = 0;
 	end
 	
 	always @(posedge reset_n)
@@ -25,6 +29,7 @@ module IFID(inst_in, inst_out, pc_in, isStall_in,  pc_out, isStall_out,  reset_n
 		inst_out <= {`NOP_OP,12'b0};
 		pc_out <= 0 ;
 		isStall_out <= 0;
+		is_flush_out <= 0;
 	end
 	
 	always @(posedge clk) 
@@ -32,11 +37,20 @@ module IFID(inst_in, inst_out, pc_in, isStall_in,  pc_out, isStall_out,  reset_n
         	pc_out <= pc_in;
 		inst_out <= inst_in;
 		isStall_out <= isStall_in;    
+		is_flush_out <= is_flush_in;
+	end
+	always @(*) begin
+		if(flush_on) begin
+			is_flush_out = flush_on;
+		end
+		/*else begin
+			is_flush_out = 0;
+		end*/
 	end
 endmodule
 
 
-module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in,
+module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_on,
  A_out, B_out, pc_out, imm_out, inst_out, isStall_out, is_flush_out, reset_n, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
@@ -48,6 +62,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in,
 	input [`WORD_SIZE-1:0] imm_in;
 	input isStall_in;
 	input is_flush_in;
+	input flush_on;
 	output reg [`WORD_SIZE-1:0] A_out;
     output reg [`WORD_SIZE-1:0] B_out;
 	output reg [`WORD_SIZE-1:0] pc_out;
@@ -84,7 +99,13 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in,
         	pc_out <= pc_in;
 		inst_out <= inst_in;
 		isStall_out <= isStall_in;
-		is_flush_out <= is_flush_in;    
+		is_flush_out <= is_flush_in;
+  
+	end
+	always @(*) begin
+		if(flush_on) begin
+			is_flush_out = flush_on;  
+		end
 	end
 endmodule
 
@@ -102,7 +123,6 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 	input [1:0] dest_in;
 	input isStall_in;
 	input is_flush_in;
-
 	output reg [`WORD_SIZE-1:0] pc_out;
     output reg [`WORD_SIZE-1:0] aluout_out;
 	output reg [`WORD_SIZE-1:0] B_out;
@@ -145,6 +165,7 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 		isStall_out <= isStall_in;
 		is_flush_out <= is_flush_in;
 	end
+
 endmodule
 
 				

@@ -32,7 +32,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire [`WORD_SIZE-1:0] inst_out_IFID;
 	wire [`WORD_SIZE-1:0] pc_out_IFID;
 	wire isStall_out_IFID;
-
+	wire flush_out_IFID;
 
 
 	// control unit input output
@@ -172,8 +172,11 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_out(inst_out_IFID), 
 		.pc_in(pc_out), // 확인 필요
 		.isStall_in(isStall),
+		.flush_on(flush_in),
+		.is_flush_in(flush_in),
 		.pc_out(pc_out_IFID),
 		.isStall_out(isStall_out_IFID), 
+		.is_flush_out(flush_out_IFID),
 		.reset_n(reset_n), 
 		.clk(clk));
 
@@ -192,7 +195,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_out(inst_out_IDEX),
 		.isStall_in(isStall_out_IFID), 
 		.isStall_out(isStall_out_IDEX),
-		.is_flush_in(flush_in),
+		.flush_on(flush_in),
+		.is_flush_in(flush_out_IFID),
 		.is_flush_out(flush_out_IDEX),
 		//.dest_out(dest_out_IDEX), 
 		.reset_n(reset_n), 
@@ -200,7 +204,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	control_unit_EX control_unit_EX_module(
 		.inst(inst_out_IDEX), 
-		.is_flush(flush_in),
+		.is_flush(flush_out_IDEX),
 		.alu_src_B(alu_src_B), 
 		.alu_op(alu_op),
 		.is_stall(isStall_out_IDEX));
@@ -210,7 +214,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.mem_read(mem_read_IDEX), 
 		.mem_write(mem_write_IDEX),
 		.is_stall(isStall_out_IDEX), 
-		.is_flush(flush_in),
+		.is_flush(flush_out_IDEX),
 		.pc_br(pc_br_IDEX), 
 		.pc_j(pc_j_IDEX),
 		.pc_jr(pc_jr_IDEX));
@@ -222,7 +226,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.reg_write(reg_write_IDEX), 
 		.pc_to_reg(pc_to_reg_IDEX),
 		.is_stall(isStall_out_IDEX),
-		.is_flush(flush_in),
+		.is_flush(flush_out_IDEX),
 		.is_lhi(is_lhi_IDEX));
 	// for loading, mem_to_reg
 	// srcB 1: using imm
@@ -249,7 +253,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.dest_out(dest_out_EXMEM), 
 		.isStall_in(isStall_out_IDEX),
 		.isStall_out(isStall_out_EXMEM),
-		.is_flush_in(flush_out_IDEX || flush_in),
+		.is_flush_in(flush_out_IDEX ),
 		.is_flush_out(flush_out_EXMEM),
 		.reset_n(reset_n), 
 		.clk(clk));
@@ -259,7 +263,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.mem_read(mem_read), 
 		.mem_write(mem_write),
 		.is_stall(isStall_out_EXMEM),
-		.is_flush(flush_out_IDEX || flush_in), 
+		.is_flush(flush_out_EXMEM), 
 		.pc_br(pc_br_EXMEM), 
 		.pc_j(pc_j_EXMEM),
 		.pc_jr(pc_jr_EXMEM));
@@ -268,7 +272,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst(inst_out_EXMEM), 
 		.mem_to_reg(dummyControlUnit),
 		.reg_write(reg_write_EXMEM), 
-		.is_flush(flush_out_IDEX || flush_in), 
+		.is_flush(flush_out_EXMEM), 
 		.pc_to_reg(dummyControlUnit),
 		.is_stall(dummyControlUnit),
 		.is_lhi(dummyControlUnit));
@@ -297,13 +301,13 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.reg_write(reg_write), 
 		.pc_to_reg(pc_to_reg),
 		.is_stall(isStall_out_MEMWB),
-		.is_flush(flush_out_EXMEM), 
+		.is_flush(flush_out_MEMWB), 
 		.is_lhi(is_lhi));
 
 	control_unit control_unit_module(
 		.inst(inst_out_MEMWB), 
 		.is_stall(isStall_out_MEMWB),
-		.is_flush(flush_out_EXMEM),
+		.is_flush(flush_out_MEMWB),
 		.halt(halt), 
 		.wwd(wwd), 
 		.new_inst(new_inst));
@@ -416,7 +420,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	
 	always @(*) begin
-		if(pc_pred != pc_out) begin
+		if(pc_pred != pc_in) begin
 			//IFID
 			//IDEX 
 			//control value -> 0
@@ -448,11 +452,11 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	
 	always @(posedge clk) begin
 		#(100/4);
-		/*$display("========================");
+		$display("========================");
 		$display("@@@@ data1 : %b", data1);
 		$display("@@@@    inst_out_IFID : %b", inst_out_IFID);
 		$display("@@@@ isStall_out_IFID : %d", isStall_out_IFID);		
-		$display("@@@          flush_in : %b", flush_in);
+		$display("@@@@   flush_out_IFID : %d", flush_out_IFID);	
 
 		$display("@@@@    inst_out_IDEX : %b", inst_out_IDEX);
 		$display("@@@@ isStall_out_IDEX : %d", isStall_out_IDEX);	
@@ -484,12 +488,12 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 		//$display("@@@ write data : %b", write_data);
 		//$display("@@@ is_lhi: %b", is_lhi);
-
+		$display("@@@          flush_in : %b", flush_in);
 		$display("@@@ num_inst : %d", num_inst);
 		$display("@@@@   new_inst : %d", new_inst);	
 		$display("@@@@   wwd : %d", wwd);	
 		$display("@@@@   output_port : %d", output_port);	
-		*/
+		
 	end
 
 endmodule

@@ -15,12 +15,15 @@ module branch_predictor(clk, reset_n, PC, next_PC);
 
 
 	//TODO: implement branch predictor
-	always @(posedge clk) begin
+	/*always @(posedge clk) begin
 		if (!reset_n) begin
 			next_PC <= 0;
 		end
 		else begin
 			next_PC <= PC + 1;
 		end
+	end*/
+	always @(*) begin
+		next_PC = PC + 1;
 	end
 endmodule
