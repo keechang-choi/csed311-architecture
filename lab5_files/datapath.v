@@ -30,7 +30,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// IFID input output
 	wire [`WORD_SIZE-1:0] inst_out_IFID;
 	wire [`WORD_SIZE-1:0] pc_out_IFID;
-	wire [`WORD_SIZE-1:0] isStall_out_IFID;
+	wire isStall_out_IFID;
 
 
 
@@ -74,7 +74,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire [`WORD_SIZE-1:0] B_out_EXMEM;
 	wire [`WORD_SIZE-1:0] aluout_out_EXMEM;
 	wire bcond_out_EXMEM;
-	wire [`WORD_SIZE-1:0] dest_out_EXMEM;
+	wire [1:0] dest_out_EXMEM;
 	wire isStall_out_EXMEM;
 	wire reg_write_EXMEM;
 	// control unit MEM input output
@@ -103,7 +103,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire [`WORD_SIZE-1:0] pc_out_MEMWB;
 	wire [`WORD_SIZE-1:0] mdr_out_MEMWB;
 	wire [`WORD_SIZE-1:0] inst_out_MEMWB;
-	wire [`WORD_SIZE-1:0] dest_out_MEMWB;
+	wire [1:0] dest_out_MEMWB;
 	wire isStall_out_MEMWB;
 
 	// control unit WB input output
@@ -311,6 +311,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.dest(write_reg),
 		.write_data(write_data),
 		.reg_write(reg_write),
+		.reset_n(reset_n),
 		.clk(clk));
 
 	immediate_generator immediate_generator_module(
