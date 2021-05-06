@@ -91,9 +91,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire mem_write;
 	//wire pc_write_cond; 
 	//wire pc_write;
-	wire pc_br;
-	wire pc_j;
-	wire pc_jr;
+	wire pc_br_EXMEM;
+	wire pc_j_EXMEM;
+	wire pc_jr_EXMEM;
 
 	// computed by bcond, pc_write_cond, pc_write
 	// for pc update
@@ -200,7 +200,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	control_unit_EX control_unit_EX_module(
 		.inst(inst_out_IDEX), 
-		.is_flush(flush_out_IDEX),
+		.is_flush(flush_in),
 		.alu_src_B(alu_src_B), 
 		.alu_op(alu_op),
 		.is_stall(isStall_out_IDEX));
@@ -210,7 +210,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.mem_read(mem_read_IDEX), 
 		.mem_write(mem_write_IDEX),
 		.is_stall(isStall_out_IDEX), 
-		.is_flush(flush_out_IDEX),
+		.is_flush(flush_in),
 		.pc_br(pc_br_IDEX), 
 		.pc_j(pc_j_IDEX),
 		.pc_jr(pc_jr_IDEX));
@@ -222,7 +222,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.reg_write(reg_write_IDEX), 
 		.pc_to_reg(pc_to_reg_IDEX),
 		.is_stall(isStall_out_IDEX),
-		.is_flush(flush_out_IDEX),
+		.is_flush(flush_in),
 		.is_lhi(is_lhi_IDEX));
 	// for loading, mem_to_reg
 	// srcB 1: using imm
@@ -259,16 +259,16 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.mem_read(mem_read), 
 		.mem_write(mem_write),
 		.is_stall(isStall_out_EXMEM),
-		.is_flush(flush_out_EXMEM), 
-		.pc_br(pc_br), 
-		.pc_j(pc_j),
-		.pc_jr(pc_jr));
+		.is_flush(flush_out_IDEX || flush_in), 
+		.pc_br(pc_br_EXMEM), 
+		.pc_j(pc_j_EXMEM),
+		.pc_jr(pc_jr_EXMEM));
 	
 	control_unit_WB control_unit_WB_M_module(
 		.inst(inst_out_EXMEM), 
 		.mem_to_reg(dummyControlUnit),
 		.reg_write(reg_write_EXMEM), 
-		.is_flush(flush_out_EXMEM), 
+		.is_flush(flush_out_IDEX || flush_in), 
 		.pc_to_reg(dummyControlUnit),
 		.is_stall(dummyControlUnit),
 		.is_lhi(dummyControlUnit));
@@ -297,13 +297,13 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.reg_write(reg_write), 
 		.pc_to_reg(pc_to_reg),
 		.is_stall(isStall_out_MEMWB),
-		.is_flush(flush_out_MEMWB), 
+		.is_flush(flush_out_EXMEM), 
 		.is_lhi(is_lhi));
 
 	control_unit control_unit_module(
 		.inst(inst_out_MEMWB), 
 		.is_stall(isStall_out_MEMWB),
-		.is_flush(flush_out_MEMWB),
+		.is_flush(flush_out_EXMEM),
 		.halt(halt), 
 		.wwd(wwd), 
 		.new_inst(new_inst));
@@ -366,7 +366,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// pc src -> mux : pc in 
 	// 0 : pc+1
 	// 1 : pc_next_out_EXMEM
-	assign pc_src = (bcond_out_EXMEM && pc_br) || pc_j;
+	assign pc_src = ((bcond_out_EXMEM && pc_br_EXMEM) || pc_j_EXMEM) ;
 	
 	mux2_1 mux_pc_src(.sel(pc_src),
 			.i1(pc_out+1),
@@ -428,9 +428,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	end
 
 	always @(posedge clk) begin
-		if(reset_n) begin
-			
-		end
 		if(new_inst)begin
 			num_inst <= num_inst+1;
 		end
@@ -451,7 +448,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	
 	always @(posedge clk) begin
 		#(100/4);
-		$display("========================");
+		/*$display("========================");
 		$display("@@@@ data1 : %b", data1);
 		$display("@@@@    inst_out_IFID : %b", inst_out_IFID);
 		$display("@@@@ isStall_out_IFID : %d", isStall_out_IFID);		
@@ -475,10 +472,15 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@ pc_in : %b", pc_in);
 		$display("@@@ pc_out : %b", pc_out);
 		$display("@@@ pc_pred : %b", pc_pred);
-		//$display("@@@ isStall : %b", isStall);
-		//$display("@@@ pc_next_in_EXMEM : %b", pc_next_in_EXMEM);
+		$display("@@@ isStall : %b", isStall);
+		$display("@@@ pc_next_in_EXMEM : %b", pc_next_in_EXMEM);
 		$display("@@@ pc_next_out_EXMEM : %b", pc_next_out_EXMEM);
 		$display("@@@ pc_src : %b", pc_src);
+		$display("@@@ pc_j_IDEX : %b", pc_j_IDEX);
+		$display("@@@ pc_jr_IDEX : %b", pc_jr_IDEX);
+		$display("@@@ pc_br_IDEX : %b", pc_br_IDEX);
+		$display("@@@ bcond_out_EXMEM : %b", bcond_out_EXMEM);
+		$display("@@@ branch_type : %d", branchType);
 
 		//$display("@@@ write data : %b", write_data);
 		//$display("@@@ is_lhi: %b", is_lhi);
@@ -487,7 +489,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@@   new_inst : %d", new_inst);	
 		$display("@@@@   wwd : %d", wwd);	
 		$display("@@@@   output_port : %d", output_port);	
-		
+		*/
 	end
 
 endmodule
