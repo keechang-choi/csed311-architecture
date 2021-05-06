@@ -319,8 +319,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.read_out2(read_out2),
 		.read1(read1),
 		.read2(read2),
-		//.dest(dest_out_MEMWB),
-		.dest(write_reg),
+		.dest(dest_out_MEMWB),
+		//.dest(write_reg),
 		.write_data(write_data),
 		.reg_write(reg_write),
 		.reset_n(reset_n),
@@ -361,10 +361,10 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// 10 : pc 
 	// 11 : is_lhi
 	mux4_1 mux_write_data(.sel({pc_to_reg || is_lhi ,mem_to_reg || is_lhi}),
-					.i1(alu_output_MEMWB),
+					.i1(aluout_out_MEMWB),
 					.i2(mdr_out_MEMWB),
 					.i3(pc_out_MEMWB),
-					.i4(extended_imm_value<<8),
+					.i4({inst_out_MEMWB[7:0],8'b0}),
 					.o(write_data));
 
 	// pc src -> mux : pc in 
@@ -483,14 +483,22 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@ pc_next_in_EXMEM : %b", pc_next_in_EXMEM);
 		$display("@@@ pc_next_out_EXMEM : %b", pc_next_out_EXMEM);
 		$display("@@@ pc_src : %b", pc_src);
-		$display("@@@ pc_j_IDEX : %b", pc_j_IDEX);
-		$display("@@@ pc_jr_IDEX : %b", pc_jr_IDEX);
-		$display("@@@ pc_br_IDEX : %b", pc_br_IDEX);
-		$display("@@@ bcond_out_EXMEM : %b", bcond_out_EXMEM);
-		$display("@@@ branch_type : %d", branchType);
+		//$display("@@@ pc_j_IDEX : %b", pc_j_IDEX);
+		//$display("@@@ pc_jr_IDEX : %b", pc_jr_IDEX);
+		//$display("@@@ pc_br_IDEX : %b", pc_br_IDEX);
+		//$display("@@@ bcond_out_EXMEM : %b", bcond_out_EXMEM);
+		//$display("@@@ branch_type : %d", branchType);
 
-		//$display("@@@ write data : %b", write_data);
-		//$display("@@@ is_lhi: %b", is_lhi);
+		$display("@@@ mem_to_reg : %d", mem_to_reg);
+		$display("@@@ pc_to_reg : %d", pc_to_reg);
+		$display("@@@ cond : %b", {pc_to_reg || is_lhi ,mem_to_reg || is_lhi});
+		$display("@@@ alu_output_MEMWB : %d", aluout_out_MEMWB);
+		$display("@@@ mdr_out_MEMWB : %d", mdr_out_MEMWB);
+		$display("@@@ pc_out_MEMWB : %d", pc_out_MEMWB);
+		$display("@@@ inst_out_MEMWB[7:0]<<8 : %d", {inst_out_MEMWB[7:0],8'b0});
+		$display("@@@ write_data : %d", write_data);
+		$display("@@@ is_lhi: %d", is_lhi);
+
 		$display("@@@          flush_in : %b", flush_in);
 		$display("@@@ num_inst : %d", num_inst);
 		$display("@@@@   new_inst : %d", new_inst);	
