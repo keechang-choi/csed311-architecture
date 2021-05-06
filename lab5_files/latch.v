@@ -1,14 +1,14 @@
 `define WORD_SIZE 16
 `include "opcodes.v"
 
-module IFID(inst_in, inst_out, pc_in, isStall_in,flush_on,is_flush_in, is_flush_out,  pc_out, isStall_out,  reset_n, clk);
+module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_out,  pc_out, isStall_out,  reset_n, clk);
     // TODO: IFID latch를 컨트롤 할 control unit input을 받아야함
 	// inst_in이 IR_in 임
 	input clk;
 	input reset_n;
     	input [`WORD_SIZE-1:0] inst_in;
 	input [`WORD_SIZE-1:0] pc_in;
-	input isStall_in;
+	input stall_on;
 	input is_flush_in;
 	input flush_on;
 	output reg [`WORD_SIZE-1:0] pc_out;
@@ -35,8 +35,10 @@ module IFID(inst_in, inst_out, pc_in, isStall_in,flush_on,is_flush_in, is_flush_
 	always @(posedge clk) 
 	begin
         	pc_out <= pc_in;
-		inst_out <= inst_in;
-		isStall_out <= isStall_in;    
+		if(!isStall_out) begin
+			inst_out <= inst_in;
+		end
+		//isStall_out <= isStall_in;    
 		is_flush_out <= is_flush_in;
 	end
 	always @(*) begin
@@ -46,6 +48,12 @@ module IFID(inst_in, inst_out, pc_in, isStall_in,flush_on,is_flush_in, is_flush_
 		/*else begin
 			is_flush_out = 0;
 		end*/
+		if(stall_on) begin
+			isStall_out = stall_on;
+		end
+		else begin
+			isStall_out = 0;
+		end
 	end
 endmodule
 

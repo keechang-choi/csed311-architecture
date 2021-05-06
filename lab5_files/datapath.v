@@ -171,7 +171,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_in(data1),  // 확인 필요
 		.inst_out(inst_out_IFID), 
 		.pc_in(pc_out), // 확인 필요
-		.isStall_in(isStall),
+		.stall_on(isStall),
 		.flush_on(flush_in),
 		.is_flush_in(flush_in),
 		.pc_out(pc_out_IFID),
@@ -274,7 +274,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.reg_write(reg_write_EXMEM), 
 		.is_flush(flush_out_EXMEM), 
 		.pc_to_reg(dummyControlUnit),
-		.is_stall(dummyControlUnit),
+		.is_stall(isStall_out_EXMEM),
 		.is_lhi(dummyControlUnit));
 
 	MEMWB MEMWB_module(
@@ -461,14 +461,17 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@@    inst_out_IDEX : %b", inst_out_IDEX);
 		$display("@@@@ isStall_out_IDEX : %d", isStall_out_IDEX);	
 		$display("@@@@   flush_out_IDEX : %d", flush_out_IDEX);		
+		$display("@@@@   reg_write_IDEX : %d", reg_write_IDEX);
 
 		$display("@@@@    inst_out_EXMEM : %b", inst_out_EXMEM);
 		$display("@@@@ isStall_out_EXMEM : %d", isStall_out_EXMEM);	
 		$display("@@@@   flush_out_EXMEM : %d", flush_out_EXMEM);	
+		$display("@@@@   reg_write_EXMEM : %d", reg_write_EXMEM);
 
 		$display("@@@@    inst_out_MEMWB : %b", inst_out_MEMWB);
 		$display("@@@@ isStall_out_MEMWB : %d", isStall_out_MEMWB);	
 		$display("@@@@   flush_out_MEMWB : %d", flush_out_MEMWB);	
+		$display("@@@@   reg_write_MEMWB : %d", reg_write);
 
 		//$display("@@@ address1 : %b", address1);
 		//$display("@@@ address2 : %b", address2);
