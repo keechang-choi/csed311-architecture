@@ -16,7 +16,8 @@ module control_unit_EX(inst,is_stall,is_flush, alu_src_B, alu_op);
 	always @(*) begin
 		if(opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
  			opcode==`LWD_OP || opcode==`SWD_OP ||
- 			opcode==`BNE_OP || opcode==`BEQ_OP || opcode==`BGZ_OP || opcode==`BLZ_OP ) begin
+ 			 opcode==`BGZ_OP || opcode==`BLZ_OP ) begin
+			//opcode==`BNE_OP || opcode==`BEQ_OP is not the case for imm
 				alu_src_B = 1;
 		end
 		else begin

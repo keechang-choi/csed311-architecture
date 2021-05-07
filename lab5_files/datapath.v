@@ -404,7 +404,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// not pc_j  & not br & not j -> 0 : then we do not use pc_next. ok
 	mux4_1 mux_pc_next(.sel({pc_j_IDEX,pc_jr_IDEX||pc_br_IDEX}),
 			.i1(0),
-			.i2(pc_out_IDEX + {8'b0,extended_immediate_value_out[7:0]}),
+			.i2(pc_out_IDEX+1 + {8'b0,extended_immediate_value_out[7:0]}),//for branch
 			.i3(jmp_address),
 			.i4(A_out_IDEX),
 			.o(pc_next_in_EXMEM));
@@ -470,6 +470,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@@    inst_out_IFID : %b", inst_out_IFID);
 		$display("@@@@ isStall_out_IFID : %d", isStall_out_IFID);		
 		$display("@@@@   flush_out_IFID : %d", flush_out_IFID);	
+		$display("@@@@        read_out1 : %d", read_out1);
+		$display("@@@@        read_out2 : %d", read_out2);
 		$display("========================================================");
 		$display("@@@@    inst_out_IDEX : %b", inst_out_IDEX);
 		$display("@@@@ isStall_out_IDEX : %d", isStall_out_IDEX);	
@@ -477,8 +479,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@@   reg_write_IDEX : %d", reg_write_IDEX);
 		$display("@@@@       A_out_IDEX : %d", A_out_IDEX);
 		$display("@@@@       B_out_IDEX : %d", B_out_IDEX);
-		$display("@@@@        read_out1 : %d", read_out1);
-		$display("@@@@        read_out2 : %d", read_out2);
 		$display("@@@@      alu_input_2 : %d", alu_input_2);
 		$display("@@@@    dest_out_IDEX : %d", dest_out_IDEX);
 		$display("@@@         pc_j_IDEX : %b", pc_j_IDEX);
@@ -497,7 +497,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@           mem_read : %d", mem_read);
 		$display("@@@          mem_write : %d", mem_write);
 		$display("@@@    bcond_out_EXMEM : %b", bcond_out_EXMEM);
-		$display("@@@        branch_type : %d", branchType);
+
 		$display("========================================================");
 		$display("@@@@    inst_out_MEMWB : %b", inst_out_MEMWB);
 		$display("@@@@ isStall_out_MEMWB : %d", isStall_out_MEMWB);	
@@ -517,7 +517,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 		$display("@@@  pc_pred : %b", pc_pred);
 		$display("@@@  isStall : %b", isStall);
-
+		$display("@@@        branch_type : %d", branchType);
 		$display("@@@   pc_src : %b", pc_src);
 
 
