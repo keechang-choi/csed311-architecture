@@ -244,14 +244,18 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 					.o(dest_out_IDEX));
 
 	EXMEM EXMEM_module(
-		.pc_in(pc_next_in_EXMEM), 
+		//.pc_in(pc_next_in_EXMEM), 
+		.pc_in(pc_out_IDEX),
 		.aluout_in(alu_output), // alu result, bcond
 		.bcond_in(bcond), // bcond
 		.A_in(A_out_IDEX),
 		.B_in(B_out_IDEX), 
 		.inst_in(inst_out_IDEX),
 		.dest_in(dest_out_IDEX), 
-		.pc_out(pc_next_out_EXMEM),
+		.pc_next_in(pc_next_in_EXMEM),
+		.pc_out(pc_out_EXMEM),
+		//.pc_out(pc_next_out_EXMEM),
+		.pc_next_out(pc_next_out_EXMEM),
 		.bcond_out(bcond_out_EXMEM), 
 		.aluout_out(aluout_out_EXMEM), 
 		.A_out(A_out_EXMEM),
@@ -372,7 +376,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	mux4_1 mux_write_data(.sel({pc_to_reg || is_lhi ,mem_to_reg || is_lhi}),
 					.i1(aluout_out_MEMWB),
 					.i2(mdr_out_MEMWB),
-					.i3(pc_out_MEMWB),
+					.i3(pc_out_MEMWB), // pc+1?
 					.i4({inst_out_MEMWB[7:0],8'b0}),
 					.o(write_data));
 

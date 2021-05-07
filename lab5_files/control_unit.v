@@ -118,43 +118,44 @@ module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg
 			pc_to_reg = 0;
 			is_lhi = 0;
 		end
-		else
-		if(opcode==`LWD_OP ) begin
-			mem_to_reg = 1;
-		end
 		else begin
-			mem_to_reg = 0;
-		end
-	
-		if((opcode==`ALU_OP&&func_code==`INST_FUNC_ADD) ||
-		(opcode==`ALU_OP&&func_code==`INST_FUNC_SUB) ||
-		(opcode==`ALU_OP&&func_code==`INST_FUNC_AND) ||
-		(opcode==`ALU_OP&&func_code==`INST_FUNC_ORR) ||
-		(opcode==`ALU_OP&&func_code==`INST_FUNC_NOT) ||
-		(opcode==`ALU_OP&&func_code==`INST_FUNC_TCP) ||
-		(opcode==`ALU_OP&&func_code==`INST_FUNC_SHL) ||
-		(opcode==`ALU_OP&&func_code==`INST_FUNC_SHR) ||
-		opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
- 		opcode==`LWD_OP || opcode==`JAL_OP ||
-		(opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)) begin
-			if(!is_stall) begin
-				reg_write = 1;
+			if(opcode==`LWD_OP ) begin
+				mem_to_reg = 1;
+			end
+			else begin
+				mem_to_reg = 0;
+			end
+		
+			if((opcode==`ALU_OP&&func_code==`INST_FUNC_ADD) ||
+			(opcode==`ALU_OP&&func_code==`INST_FUNC_SUB) ||
+			(opcode==`ALU_OP&&func_code==`INST_FUNC_AND) ||
+			(opcode==`ALU_OP&&func_code==`INST_FUNC_ORR) ||
+			(opcode==`ALU_OP&&func_code==`INST_FUNC_NOT) ||
+			(opcode==`ALU_OP&&func_code==`INST_FUNC_TCP) ||
+			(opcode==`ALU_OP&&func_code==`INST_FUNC_SHL) ||
+			(opcode==`ALU_OP&&func_code==`INST_FUNC_SHR) ||
+			opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
+ 			opcode==`LWD_OP || opcode==`JAL_OP ||
+			(opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)) begin
+				if(!is_stall) begin
+					reg_write = 1;
+				end
+				else begin
+					reg_write = 0;
+				end
 			end
 			else begin
 				reg_write = 0;
+			end	
+			if(opcode==`JAL_OP ||
+			(opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)) begin
+				pc_to_reg = 1;
 			end
-		end
-		else begin
-			reg_write = 0;
-		end	
-		if(opcode==`JAL_OP ||
-		(opcode==`JRL_OP&& func_code == `INST_FUNC_JRL)) begin
-			pc_to_reg = 1;
-		end
-		else begin
-			pc_to_reg = 0;
-		end begin
-		is_lhi = (opcode == `LHI_OP);
+			else begin
+				pc_to_reg = 0;
+			end begin
+				is_lhi = (opcode == `LHI_OP);
+			end
 		end
 	end
 endmodule
