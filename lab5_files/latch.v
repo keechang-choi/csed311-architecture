@@ -118,13 +118,14 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_o
 endmodule
 
 				
-module EXMEM(pc_in, aluout_in, bcond_in, B_in, inst_in, dest_in, isStall_in, is_flush_in,
-pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n, clk);
+module EXMEM(pc_in, aluout_in, bcond_in,A_in, B_in, inst_in, dest_in, isStall_in, is_flush_in,
+pc_out, aluout_out, bcond_out,A_out, B_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
 	input reset_n;
-    input [`WORD_SIZE-1:0] pc_in;
+    	input [`WORD_SIZE-1:0] pc_in;
 	input [`WORD_SIZE-1:0] aluout_in;
+	input [`WORD_SIZE-1:0] A_in;
 	input [`WORD_SIZE-1:0] B_in;
 	input [`WORD_SIZE-1:0] inst_in;
 	input bcond_in;
@@ -132,9 +133,10 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 	input isStall_in;
 	input is_flush_in;
 	output reg [`WORD_SIZE-1:0] pc_out;
-    output reg [`WORD_SIZE-1:0] aluout_out;
+    	output reg [`WORD_SIZE-1:0] aluout_out;
+	output reg [`WORD_SIZE-1:0] A_out;
 	output reg [`WORD_SIZE-1:0] B_out;
-    output reg [`WORD_SIZE-1:0] inst_out;
+    	output reg [`WORD_SIZE-1:0] inst_out;
 	output reg bcond_out;
 	output reg [1:0] dest_out;
 	output reg isStall_out;
@@ -142,6 +144,7 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 	initial begin
 		pc_out = 0;
 		aluout_out = 0;
+		A_out = 0;
 		B_out = 0;
         	inst_out = 0;
 		bcond_out = 0;
@@ -154,6 +157,7 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 	begin
 		pc_out <= 0;
 		aluout_out <= 0;
+		A_out <= 0;
 		B_out <= 0;
 		inst_out <= {`NOP_OP,12'b0};
 		bcond_out <= 0;
@@ -166,6 +170,7 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 	begin
 		pc_out <= pc_in;
 		aluout_out <= aluout_in;
+		A_out <= A_in;
 		B_out <= B_in;
        		inst_out <= inst_in;    
 		bcond_out <= bcond_in;
@@ -177,27 +182,30 @@ pc_out, aluout_out, bcond_out, B_out, inst_out, dest_out, isStall_out, is_flush_
 endmodule
 
 				
-module MEMWB(pc_in, mdr_in, aluout_in, inst_in, dest_in, isStall_in, is_flush_in,
-pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n, clk);
+module MEMWB(pc_in, mdr_in, aluout_in, inst_in, dest_in, isStall_in, is_flush_in,A_in,
+A_out, pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
 	input reset_n;
 	input [`WORD_SIZE-1:0] pc_in;
-    input [`WORD_SIZE-1:0] mdr_in;
+    	input [`WORD_SIZE-1:0] mdr_in;
 	input [`WORD_SIZE-1:0] aluout_in;
 	input [`WORD_SIZE-1:0] inst_in;
 	input [1:0] dest_in;
 	input isStall_in;
 	input is_flush_in;
+	input [`WORD_SIZE-1:0] A_in;
+	output reg [`WORD_SIZE-1:0] A_out;
 	output reg [`WORD_SIZE-1:0] pc_out;
 	output reg [`WORD_SIZE-1:0] mdr_out;
-    output reg [`WORD_SIZE-1:0] aluout_out;
+    	output reg [`WORD_SIZE-1:0] aluout_out;
 	output reg [`WORD_SIZE-1:0] inst_out;
 	output reg [1:0] dest_out;
 	output reg isStall_out;
 	output reg is_flush_out;
 
 	initial begin
+		A_out = 0;
 		pc_out = 0;
 		mdr_out = 0;
 		aluout_out = 0;
@@ -209,6 +217,7 @@ pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_out, rese
 	
 	always @(posedge reset_n)
 	begin
+		A_out <= 0;
 		pc_out <= 0;
 		mdr_out <= 0;
         	aluout_out <= 0;
@@ -220,9 +229,10 @@ pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_out, rese
 	
 	always @(posedge clk) 
 	begin
+		A_out <= A_in;
 		pc_out <= pc_in;
 		mdr_out <= mdr_in;
-        aluout_out <= aluout_in;
+        	aluout_out <= aluout_in;
 		inst_out <= inst_in;
 		dest_out <= dest_in;
 		isStall_out <= isStall_in;

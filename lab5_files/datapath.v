@@ -72,6 +72,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire [`WORD_SIZE-1:0] inst_out_EXMEM;
 	wire [`WORD_SIZE-1:0] pc_out_EXMEM;
 	wire [`WORD_SIZE-1:0] pc_next_out_EXMEM;
+	wire [`WORD_SIZE-1:0] A_out_EXMEM;
 	wire [`WORD_SIZE-1:0] B_out_EXMEM;
 	wire [`WORD_SIZE-1:0] aluout_out_EXMEM;
 	wire bcond_out_EXMEM;
@@ -104,6 +105,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire [`WORD_SIZE-1:0] pc_out_MEMWB;
 	wire [`WORD_SIZE-1:0] mdr_out_MEMWB;
 	wire [`WORD_SIZE-1:0] inst_out_MEMWB;
+	wire [`WORD_SIZE-1:0] A_out_MEMWB;
 	wire [1:0] dest_out_MEMWB;
 	wire isStall_out_MEMWB;
 
@@ -144,8 +146,11 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	reg flush_in;
 	wire flush_out_IDEX, flush_out_EXMEM, flush_out_MEMWB;
 
+	//mem read data
+	reg [`WORD_SIZE-1:0] mem_read_data;
+
 	assign immediate_value = inst_out_IFID[7:0];
-	assign read1 = wwd ? inst_out_MEMWB[11:10] :inst_out_IFID[11:10];
+	assign read1 = inst_out_IFID[11:10];
 	assign read2 = inst_out_IFID[9:8];
 
 	assign data2 = write_m2 ? B_out_EXMEM : 16'bz;
@@ -242,12 +247,14 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.pc_in(pc_next_in_EXMEM), 
 		.aluout_in(alu_output), // alu result, bcond
 		.bcond_in(bcond), // bcond
+		.A_in(A_out_IDEX),
 		.B_in(B_out_IDEX), 
 		.inst_in(inst_out_IDEX),
 		.dest_in(dest_out_IDEX), 
 		.pc_out(pc_next_out_EXMEM),
 		.bcond_out(bcond_out_EXMEM), 
 		.aluout_out(aluout_out_EXMEM), 
+		.A_out(A_out_EXMEM),
 		.B_out(B_out_EXMEM), 
 		.inst_out(inst_out_EXMEM),
 		.dest_out(dest_out_EXMEM), 
@@ -283,6 +290,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.aluout_in(aluout_out_EXMEM), 
 		.inst_in(inst_out_EXMEM),
 		.dest_in(dest_out_EXMEM), 
+		.A_in(A_out_EXMEM),
+		.A_out(A_out_MEMWB),
 		.pc_out(pc_out_MEMWB),
 		.mdr_out(mdr_out_MEMWB), 
 		.aluout_out(aluout_out_MEMWB),
@@ -339,7 +348,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.branchType(branchType));
 
 		
-	mux2_1 mux_alu_input1(
+	mux2_1 mux_alu_input_2(
 		.sel(alu_src_B),
 		.i1(B_out_IDEX),
 		.i2(extended_immediate_value_out),
@@ -429,14 +438,18 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		else begin
 			flush_in = 0;
 		end
+		if(mem_read) begin
+			mem_read_data = data2;
+		end
 	end
 
 	always @(posedge clk) begin
+		
 		if(new_inst)begin
 			num_inst <= num_inst+1;
 		end
 		if(wwd) begin
-			output_port <= read_out1;
+			output_port <= A_out_MEMWB;
 		end
 	end
 
@@ -451,59 +464,82 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	
 	always @(posedge clk) begin
-		#(100/4);
-		$display("========================");
+		#(3*100/4);
+		$display("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		$display("@@@@ data1 : %b", data1);
 		$display("@@@@    inst_out_IFID : %b", inst_out_IFID);
 		$display("@@@@ isStall_out_IFID : %d", isStall_out_IFID);		
 		$display("@@@@   flush_out_IFID : %d", flush_out_IFID);	
-
+		$display("========================================================");
 		$display("@@@@    inst_out_IDEX : %b", inst_out_IDEX);
 		$display("@@@@ isStall_out_IDEX : %d", isStall_out_IDEX);	
 		$display("@@@@   flush_out_IDEX : %d", flush_out_IDEX);		
 		$display("@@@@   reg_write_IDEX : %d", reg_write_IDEX);
+		$display("@@@@       A_out_IDEX : %d", A_out_IDEX);
+		$display("@@@@       B_out_IDEX : %d", B_out_IDEX);
+		$display("@@@@        read_out1 : %d", read_out1);
+		$display("@@@@        read_out2 : %d", read_out2);
+		$display("@@@@      alu_input_2 : %d", alu_input_2);
+		$display("@@@@    dest_out_IDEX : %d", dest_out_IDEX);
+		$display("@@@         pc_j_IDEX : %b", pc_j_IDEX);
+		$display("@@@        pc_jr_IDEX : %b", pc_jr_IDEX);
+		$display("@@@        pc_br_IDEX : %b", pc_br_IDEX);
+
+		$display("========================================================");
 
 		$display("@@@@    inst_out_EXMEM : %b", inst_out_EXMEM);
 		$display("@@@@ isStall_out_EXMEM : %d", isStall_out_EXMEM);	
 		$display("@@@@   flush_out_EXMEM : %d", flush_out_EXMEM);	
 		$display("@@@@   reg_write_EXMEM : %d", reg_write_EXMEM);
-
+		$display("@@@   pc_next_in_EXMEM : %b", pc_next_in_EXMEM);
+		$display("@@@  pc_next_out_EXMEM : %b", pc_next_out_EXMEM);
+		$display("@@@   aluout_out_EXMEM : %b", aluout_out_EXMEM);
+		$display("@@@           mem_read : %d", mem_read);
+		$display("@@@          mem_write : %d", mem_write);
+		$display("@@@    bcond_out_EXMEM : %b", bcond_out_EXMEM);
+		$display("@@@        branch_type : %d", branchType);
+		$display("========================================================");
 		$display("@@@@    inst_out_MEMWB : %b", inst_out_MEMWB);
 		$display("@@@@ isStall_out_MEMWB : %d", isStall_out_MEMWB);	
 		$display("@@@@   flush_out_MEMWB : %d", flush_out_MEMWB);	
 		$display("@@@@   reg_write_MEMWB : %d", reg_write);
 
-		//$display("@@@ address1 : %b", address1);
-		//$display("@@@ address2 : %b", address2);
+		$display("@@@   alu_output_MEMWB : %d", aluout_out_MEMWB);
+		$display("@@@      mdr_out_MEMWB : %d", mdr_out_MEMWB);
+		$display("@@@       pc_out_MEMWB : %d", pc_out_MEMWB);
+		$display("@@@     dest_out_MEMWB : %d", dest_out_MEMWB);
 
-		$display("@@@ pc_in : %b", pc_in);
-		$display("@@@ pc_out : %b", pc_out);
-		$display("@@@ pc_pred : %b", pc_pred);
-		$display("@@@ isStall : %b", isStall);
-		$display("@@@ pc_next_in_EXMEM : %b", pc_next_in_EXMEM);
-		$display("@@@ pc_next_out_EXMEM : %b", pc_next_out_EXMEM);
-		$display("@@@ pc_src : %b", pc_src);
-		//$display("@@@ pc_j_IDEX : %b", pc_j_IDEX);
-		//$display("@@@ pc_jr_IDEX : %b", pc_jr_IDEX);
-		//$display("@@@ pc_br_IDEX : %b", pc_br_IDEX);
-		//$display("@@@ bcond_out_EXMEM : %b", bcond_out_EXMEM);
-		//$display("@@@ branch_type : %d", branchType);
+		$display("========================================================");
+		$display("@@@    pc_in : %b", pc_in);
+		$display("@@@ pc_out b : %b", pc_out);
+		$display("@@@ pc_out h : %h", pc_out);
+		$display("@@@ pc_out d : %d", pc_out);
 
+		$display("@@@  pc_pred : %b", pc_pred);
+		$display("@@@  isStall : %b", isStall);
+
+		$display("@@@   pc_src : %b", pc_src);
+
+
+		
+		$display("@@@       address2 : %d", address2);
+		$display("@@@        read_m2 : %d", read_m2);
+		$display("@@@          data2 : %d", data2);
+		$display("@@@  mem_read_data : %d", mem_read_data);	
+	
+		
+		
 		$display("@@@ mem_to_reg : %d", mem_to_reg);
-		$display("@@@ pc_to_reg : %d", pc_to_reg);
-		$display("@@@ cond : %b", {pc_to_reg || is_lhi ,mem_to_reg || is_lhi});
-		$display("@@@ alu_output_MEMWB : %d", aluout_out_MEMWB);
-		$display("@@@ mdr_out_MEMWB : %d", mdr_out_MEMWB);
-		$display("@@@ pc_out_MEMWB : %d", pc_out_MEMWB);
-		$display("@@@ inst_out_MEMWB[7:0]<<8 : %d", {inst_out_MEMWB[7:0],8'b0});
+		$display("@@@  pc_to_reg : %d", pc_to_reg);
+		$display("@@@       cond : %b", {pc_to_reg || is_lhi ,mem_to_reg || is_lhi});
 		$display("@@@ write_data : %d", write_data);
-		$display("@@@ is_lhi: %d", is_lhi);
+		//$display("@@@ is_lhi: %d", is_lhi);
 
-		$display("@@@          flush_in : %b", flush_in);
-		$display("@@@ num_inst : %d", num_inst);
-		$display("@@@@   new_inst : %d", new_inst);	
-		$display("@@@@   wwd : %d", wwd);	
-		$display("@@@@   output_port : %d", output_port);	
+		$display("@@@        flush_in : %b", flush_in);
+		$display("@@@        num_inst : %d", num_inst);
+		$display("@@@@       new_inst : %d", new_inst);	
+		$display("@@@@            wwd : %d", wwd);	
+		$display("@@@@    output_port : %d", output_port);	
 		
 	end
 
