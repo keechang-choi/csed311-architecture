@@ -88,7 +88,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire pc_br_IDEX;
 	wire pc_j_IDEX;
 	wire pc_jr_IDEX;
-	wire pc_jrl_IDEX;
 
 
 	wire mem_write;
@@ -97,7 +96,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire pc_br_EXMEM;
 	wire pc_j_EXMEM;
 	wire pc_jr_EXMEM;
-	wire pc_jrl_EXMEM;
 
 	// computed by bcond, pc_write_cond, pc_write
 	// for pc update
@@ -225,8 +223,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.is_flush(flush_out_IDEX),
 		.pc_br(pc_br_IDEX), 
 		.pc_j(pc_j_IDEX),
-		.pc_jr(pc_jr_IDEX),
-		.pc_jrl(pc_jrl_IDEX)
+		.pc_jr(pc_jr_IDEX)
 		);
 
 	//kc add
@@ -257,7 +254,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.B_in(B_out_IDEX), 
 		.inst_in(inst_out_IDEX),
 		.dest_in(dest_out_IDEX), 
-		.pc_next_in(pc_jrl_IDEX? A_out_IDEX :pc_next_in_EXMEM),
+		.pc_next_in(pc_next_in_EXMEM),
 		.pc_out(pc_out_EXMEM),
 		//.pc_out(pc_next_out_EXMEM),
 		.pc_next_out(pc_next_out_EXMEM),
@@ -282,8 +279,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.is_flush(flush_out_EXMEM), 
 		.pc_br(pc_br_EXMEM), 
 		.pc_j(pc_j_EXMEM),
-		.pc_jr(pc_jr_EXMEM),
-		.pc_jrl(pc_jrl_EXMEM));
+		.pc_jr(pc_jr_EXMEM));
 	
 	control_unit_WB control_unit_WB_M_module(
 		.inst(inst_out_EXMEM), 
@@ -389,7 +385,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// pc src -> mux : pc in 
 	// 0 : pc+1
 	// 1 : pc_next_out_EXMEM
-	assign pc_src = ((bcond_out_EXMEM && pc_br_EXMEM) || pc_j_EXMEM || pc_jrl_EXMEM) ;
+	assign pc_src = ((bcond_out_EXMEM && pc_br_EXMEM) || pc_j_EXMEM) ;
 	
 	mux2_1 mux_pc_src(.sel(pc_src),
 			.i1(pc_out+1),
@@ -419,10 +415,6 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 			.i4(A_out_IDEX),
 			.o(pc_next_in_EXMEM));
 	
-	// mux2_1 mux_pc_jrl(.sel(pc_jrl_IDEX),
-	// .i1(pc_next_in_EXMEM),
-	// .i2(A_out_IDEX),
-	// .o(pc_next_in_EXMEM));
 	
 	 hazard_detect hazard_detect_module(
 		 .inst_IFID(inst_out_IFID), 

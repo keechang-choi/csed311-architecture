@@ -87,11 +87,6 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 				pc_j = 0;
 				pc_jr = 0;
 			end
-			if(opcode==`JRL_OP && func_code == `INST_FUNC_JRL)begin
-				pc_jrl = 1;
-			end else begin
-				pc_jrl = 0;
-			end
 			if(opcode==`BNE_OP || opcode==`BEQ_OP ||
 				opcode==`BGZ_OP ||opcode==`BLZ_OP) begin
 				pc_br = 1;
