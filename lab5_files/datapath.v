@@ -88,6 +88,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire pc_br_IDEX;
 	wire pc_j_IDEX;
 	wire pc_jr_IDEX;
+	wire pc_jrl_IDEX;
+
 
 	wire mem_write;
 	//wire pc_write_cond; 
@@ -95,6 +97,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	wire pc_br_EXMEM;
 	wire pc_j_EXMEM;
 	wire pc_jr_EXMEM;
+	wire pc_jrl_EXMEM;
 
 	// computed by bcond, pc_write_cond, pc_write
 	// for pc update
@@ -222,7 +225,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.is_flush(flush_out_IDEX),
 		.pc_br(pc_br_IDEX), 
 		.pc_j(pc_j_IDEX),
-		.pc_jr(pc_jr_IDEX));
+		.pc_jr(pc_jr_IDEX),
+		.pc_jrl(pc_jrl_IDEX)
+		);
 
 	//kc add
 	control_unit_WB control_unit_WB_IDEX_module(
@@ -252,7 +257,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.B_in(B_out_IDEX), 
 		.inst_in(inst_out_IDEX),
 		.dest_in(dest_out_IDEX), 
-		.pc_next_in(pc_next_in_EXMEM),
+		.pc_next_in(pc_jrl_IDEX? A_out_IDEX :pc_next_in_EXMEM),
 		.pc_out(pc_out_EXMEM),
 		//.pc_out(pc_next_out_EXMEM),
 		.pc_next_out(pc_next_out_EXMEM),
@@ -277,7 +282,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.is_flush(flush_out_EXMEM), 
 		.pc_br(pc_br_EXMEM), 
 		.pc_j(pc_j_EXMEM),
-		.pc_jr(pc_jr_EXMEM));
+		.pc_jr(pc_jr_EXMEM),
+		.pc_jrl(pc_jrl_EXMEM));
 	
 	control_unit_WB control_unit_WB_M_module(
 		.inst(inst_out_EXMEM), 
@@ -376,14 +382,14 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	mux4_1 mux_write_data(.sel({pc_to_reg || is_lhi ,mem_to_reg || is_lhi}),
 					.i1(aluout_out_MEMWB),
 					.i2(mdr_out_MEMWB),
-					.i3(pc_out_MEMWB+1), // pc+1?
+					.i3(pc_out_MEMWB + 1), // pc+1?
 					.i4({inst_out_MEMWB[7:0],8'b0}),
 					.o(write_data));
 
 	// pc src -> mux : pc in 
 	// 0 : pc+1
 	// 1 : pc_next_out_EXMEM
-	assign pc_src = ((bcond_out_EXMEM && pc_br_EXMEM) || pc_j_EXMEM) ;
+	assign pc_src = ((bcond_out_EXMEM && pc_br_EXMEM) || pc_j_EXMEM || pc_jrl_EXMEM) ;
 	
 	mux2_1 mux_pc_src(.sel(pc_src),
 			.i1(pc_out+1),
@@ -406,12 +412,17 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	// pc_j & not pc_jr -> not pc_br -> 10
 	// pc_j & pc_jr -> not pc_br -> 11
 	// not pc_j  & not br & not j -> 0 : then we do not use pc_next. ok
-	mux4_1 mux_pc_next(.sel({pc_j_IDEX,pc_jr_IDEX||pc_br_IDEX}),
+	mux4_1 mux_pc_next(.sel({pc_j_IDEX, pc_jr_IDEX||pc_br_IDEX}),
 			.i1(0),
 			.i2(pc_out_IDEX+1 + {8'b0,extended_immediate_value_out[7:0]}),//for branch
 			.i3(jmp_address),
 			.i4(A_out_IDEX),
 			.o(pc_next_in_EXMEM));
+	
+	// mux2_1 mux_pc_jrl(.sel(pc_jrl_IDEX),
+	// .i1(pc_next_in_EXMEM),
+	// .i2(A_out_IDEX),
+	// .o(pc_next_in_EXMEM));
 	
 	 hazard_detect hazard_detect_module(
 		 .inst_IFID(inst_out_IFID), 

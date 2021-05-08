@@ -33,7 +33,7 @@ module control_unit_EX(inst,is_stall,is_flush, alu_src_B, alu_op);
 	end
 endmodule
 
-module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j, pc_jr);
+module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j, pc_jr, pc_jrl);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
 	input is_flush;
@@ -45,6 +45,7 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 	// for jump branch
 	output reg pc_j;
 	output reg pc_jr;
+	output reg pc_jrl;
 
 	wire [3:0] opcode;
 	wire [5:0] func_code;
@@ -57,6 +58,7 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 			pc_br = 0;
 			pc_j = 0;
 			pc_jr = 0;
+			pc_jrl = 0;
 		end
 		else begin
 			if(opcode==`LWD_OP) begin
@@ -84,6 +86,11 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 			else begin
 				pc_j = 0;
 				pc_jr = 0;
+			end
+			if(opcode==`JRL_OP && func_code == `INST_FUNC_JRL)begin
+				pc_jrl = 1;
+			end else begin
+				pc_jrl = 0;
 			end
 			if(opcode==`BNE_OP || opcode==`BEQ_OP ||
 				opcode==`BGZ_OP ||opcode==`BLZ_OP) begin
