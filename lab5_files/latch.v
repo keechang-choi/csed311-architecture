@@ -34,9 +34,10 @@ module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_ou
 	
 	always @(posedge clk) 
 	begin
-        	pc_out <= pc_in;
+        	
 		if(!isStall_out) begin
 			inst_out <= inst_in;
+			pc_out <= pc_in;
 		end
 		//isStall_out <= isStall_in;    
 		is_flush_out <= is_flush_in;

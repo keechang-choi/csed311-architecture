@@ -396,7 +396,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	PC pc_module(
 		.pc_in(pc_in),
 		.reset_n(reset_n),
-		.pc_update(!isStall),
+		.pc_update(pc_src || !isStall),
 		.clk(clk),
 		.pc_out(pc_out)
 	);
@@ -479,6 +479,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@@   flush_out_IFID : %d", flush_out_IFID);	
 		$display("@@@@        read_out1 : %d", read_out1);
 		$display("@@@@        read_out2 : %d", read_out2);
+		$display("@@@@      pc_out_IFID : %h", pc_out_IFID);
+
 		$display("========================================================");
 		$display("@@@@    inst_out_IDEX : %b", inst_out_IDEX);
 		$display("@@@@ isStall_out_IDEX : %d", isStall_out_IDEX);	
@@ -491,6 +493,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@         pc_j_IDEX : %b", pc_j_IDEX);
 		$display("@@@        pc_jr_IDEX : %b", pc_jr_IDEX);
 		$display("@@@        pc_br_IDEX : %b", pc_br_IDEX);
+		$display("@@@@      pc_out_IDEX : %h", pc_out_IDEX);
 
 		$display("========================================================");
 
@@ -504,6 +507,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@           mem_read : %d", mem_read);
 		$display("@@@          mem_write : %d", mem_write);
 		$display("@@@    bcond_out_EXMEM : %b", bcond_out_EXMEM);
+		$display("@@@@      pc_out_EXMEM : %h", pc_out_EXMEM);
 
 		$display("========================================================");
 		$display("@@@@    inst_out_MEMWB : %b", inst_out_MEMWB);
@@ -515,7 +519,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@      mdr_out_MEMWB : %d", mdr_out_MEMWB);
 		$display("@@@       pc_out_MEMWB : %d", pc_out_MEMWB);
 		$display("@@@     dest_out_MEMWB : %d", dest_out_MEMWB);
-
+		$display("@@@@      pc_out_MEMWB : %h", pc_out_MEMWB);
 
 		$display("========================================================");
 		$display("@@@    pc_in : %b", pc_in);
