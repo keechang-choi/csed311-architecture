@@ -134,7 +134,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 
 	// alu_control_unit output
 	wire [3:0] funcCode;
-	wire [1:0] branchType;
+	wire [2:0] branchType;
 
 	//alu input
 	wire [`WORD_SIZE-1:0] alu_input_2;	
@@ -145,6 +145,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	
 	//flush
 	reg flush_in;
+	//wire flush_in;
 	wire flush_out_IDEX, flush_out_EXMEM, flush_out_MEMWB;
 
 	//mem read data
@@ -418,6 +419,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	
 	 hazard_detect hazard_detect_module(
 		 .inst_IFID(inst_out_IFID), 
+		 .is_flush(flush_out_IFID),
 		 .rs1(read1), 
 		 .rs2(read2), 
 		 .reg_write_IDEX(reg_write_IDEX), 
@@ -434,8 +436,10 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.next_PC(pc_pred)
 		);
 
+	//assign flush_in = pc_src;
 	
 	always @(*) begin
+		
 		if(pc_pred != pc_in) begin
 			//IFID
 			//IDEX 

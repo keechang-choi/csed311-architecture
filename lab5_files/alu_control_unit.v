@@ -6,10 +6,11 @@ module alu_control_unit(funct, opcode, ALUOp, funcCode, branchType);
   input [3:0] opcode;
 
   output reg [3:0] funcCode;
-  output reg [1:0] branchType;
+  output reg [2:0] branchType;
 
    //TODO: implement ALU control unit
   always @(*) begin
+	branchType = 4;
    	case (ALUOp)
 		0 : begin
        			case (opcode)

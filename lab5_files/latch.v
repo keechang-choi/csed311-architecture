@@ -34,13 +34,19 @@ module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_ou
 	
 	always @(posedge clk) 
 	begin
-        	
-		if(!isStall_out) begin
+        	//if(!is_flush_out) begin
+			if(!isStall_out) begin
+				inst_out <= inst_in;
+				pc_out <= pc_in;
+			end
+		//end
+		/*else begin
 			inst_out <= inst_in;
 			pc_out <= pc_in;
-		end
-		//isStall_out <= isStall_in;    
+		end*/
 		is_flush_out <= is_flush_in;
+		//isStall_out <= isStall_in;    
+		
 	end
 	always @(*) begin
 		if(flush_on) begin
@@ -54,6 +60,8 @@ module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_ou
 		end
 		else begin
 			isStall_out = 0;
+			//inst_out = inst_in;
+			//pc_out = pc_in; // #281 inst??
 		end
 	end
 endmodule
@@ -83,7 +91,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_o
 		A_out = 0;
 		B_out = 0;
 		imm_out = 0;
-        inst_out = 0;
+        	inst_out = 0;
 		pc_out = 0;
 		isStall_out = 0;
 		is_flush_out = 0;
