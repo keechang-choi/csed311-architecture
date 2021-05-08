@@ -376,7 +376,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	mux4_1 mux_write_data(.sel({pc_to_reg || is_lhi ,mem_to_reg || is_lhi}),
 					.i1(aluout_out_MEMWB),
 					.i2(mdr_out_MEMWB),
-					.i3(pc_out_MEMWB), // pc+1?
+					.i3(pc_out_MEMWB+1), // pc+1?
 					.i4({inst_out_MEMWB[7:0],8'b0}),
 					.o(write_data));
 
@@ -512,6 +512,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		$display("@@@      mdr_out_MEMWB : %d", mdr_out_MEMWB);
 		$display("@@@       pc_out_MEMWB : %d", pc_out_MEMWB);
 		$display("@@@     dest_out_MEMWB : %d", dest_out_MEMWB);
+
 
 		$display("========================================================");
 		$display("@@@    pc_in : %b", pc_in);

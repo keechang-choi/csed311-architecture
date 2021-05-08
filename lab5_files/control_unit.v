@@ -51,7 +51,7 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 	assign opcode = inst[15:12];
 	assign func_code = inst[5:0];
 	always @(*) begin
-		if(is_flush) begin
+		if(is_flush || is_stall) begin
 			mem_read = 0;
 			mem_write = 0;
 			pc_br = 0;
