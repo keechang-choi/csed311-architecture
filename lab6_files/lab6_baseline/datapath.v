@@ -110,6 +110,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 	wire [`WORD_SIZE-1:0] A_out_MEMWB;
 	wire [1:0] dest_out_MEMWB;
 	wire isStall_out_MEMWB;
+	wire stall_m2_out_MEMWB;	
 
 	// control unit WB input output
 	wire mem_to_reg; 
@@ -319,6 +320,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		.isStall_out(isStall_out_MEMWB),
 		.is_flush_in(flush_out_EXMEM),
 		.is_flush_out(flush_out_MEMWB),
+		.stall_m2_out(stall_m2_out_MEMWB),
 		.reset_n(reset_n), 
 		.clk(clk));
 
@@ -329,7 +331,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		.pc_to_reg(pc_to_reg),
 		.is_stall(isStall_out_MEMWB),
 		.is_flush(flush_out_MEMWB),
-		.stall_m2(stall_m2), 
+		.stall_m2(stall_m2_out_MEMWB), 
 		.is_lhi(is_lhi));
 
 	control_unit control_unit_module(
@@ -473,7 +475,12 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 			end
 		end
 		if(mem_write) begin
-		
+			if(ready_m2) begin
+				stall_m2 = 0;
+			end
+			else begin
+				stall_m2 = 1;
+			end
 		end
 	end
 
