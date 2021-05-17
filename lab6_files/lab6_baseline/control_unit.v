@@ -98,10 +98,11 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 	end
 endmodule
 
-module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg, is_lhi);
+module control_unit_WB(inst,is_stall, is_flush, stall_m2 , mem_to_reg, reg_write, pc_to_reg, is_lhi);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
 	input is_flush;
+	input stall_m2;
 	output reg mem_to_reg;
 	output reg reg_write;
 	output reg pc_to_reg;
@@ -114,7 +115,7 @@ module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg
 	assign func_code = inst[5:0];
 
 	always @(*) begin
-		if(is_flush) begin
+		if(is_flush || stall_m2) begin
 			mem_to_reg = 0;
 			reg_write = 0;
 			pc_to_reg = 0;

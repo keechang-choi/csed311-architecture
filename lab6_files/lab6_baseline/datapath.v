@@ -7,7 +7,7 @@
 `include "hazard.v"
 `include "latch.v"
 
-module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
+module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready_m2, address2, data2, num_inst, output_port, is_halted);
 
 	input clk;
 	input reset_n;
@@ -17,6 +17,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	output read_m2;
 	output write_m2;
 	output [`WORD_SIZE-1:0] address2;
+	input ready_m2;
 
 	input [`WORD_SIZE-1:0] data1;
 	inout [`WORD_SIZE-1:0] data2;
@@ -151,6 +152,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	//mem read data
 	reg [`WORD_SIZE-1:0] mem_read_data;
 
+	// stall memory
+	reg stall_m2;
+
 	assign immediate_value = inst_out_IFID[7:0];
 	assign read1 = inst_out_IFID[11:10];
 	assign read2 = inst_out_IFID[9:8];
@@ -164,6 +168,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		num_inst = 0;
 		output_port = 0;
 		flush_in = 0;
+		stall_m2 = 0;
 	end
 
 	always @(posedge reset_n)
@@ -171,7 +176,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		num_inst <= 0;
 		output_port <= 0;
 		flush_in <= 0;
-		
+		stall_m2 <= 0;
 	end
 
 	IFID IFID_module(
@@ -181,6 +186,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.stall_on(isStall),
 		.flush_on(flush_in),
 		.is_flush_in(flush_in),
+		.stall_m2(stall_m2),
 		.pc_out(pc_out_IFID),
 		.isStall_out(isStall_out_IFID), 
 		.is_flush_out(flush_out_IFID),
@@ -194,6 +200,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.pc_in(pc_out_IFID), 
 		.imm_in(extended_immediate_value), 
 		.inst_in(inst_out_IFID),
+		.stall_m2(stall_m2),
 		//.dest_in(write_reg), // write reg mux로 구해야함
 		.A_out(A_out_IDEX), 
 		.B_out(B_out_IDEX), 
@@ -235,6 +242,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.pc_to_reg(pc_to_reg_IDEX),
 		.is_stall(isStall_out_IDEX),
 		.is_flush(flush_out_IDEX),
+		.stall_m2(0),
 		.is_lhi(is_lhi_IDEX));
 	// for loading, mem_to_reg
 	// srcB 1: using imm
@@ -256,6 +264,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_in(inst_out_IDEX),
 		.dest_in(dest_out_IDEX), 
 		.pc_next_in(pc_next_in_EXMEM),
+		.stall_m2(stall_m2),
 		.pc_out(pc_out_EXMEM),
 		//.pc_out(pc_next_out_EXMEM),
 		.pc_next_out(pc_next_out_EXMEM),
@@ -289,6 +298,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.is_flush(flush_out_EXMEM), 
 		.pc_to_reg(dummyControlUnit),
 		.is_stall(isStall_out_EXMEM),
+		.stall_m2(0),
 		.is_lhi(dummyControlUnit));
 
 	MEMWB MEMWB_module(
@@ -298,6 +308,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.inst_in(inst_out_EXMEM),
 		.dest_in(dest_out_EXMEM), 
 		.A_in(A_out_EXMEM),
+		.stall_m2(stall_m2),
 		.A_out(A_out_MEMWB),
 		.pc_out(pc_out_MEMWB),
 		.mdr_out(mdr_out_MEMWB), 
@@ -317,7 +328,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		.reg_write(reg_write), 
 		.pc_to_reg(pc_to_reg),
 		.is_stall(isStall_out_MEMWB),
-		.is_flush(flush_out_MEMWB), 
+		.is_flush(flush_out_MEMWB),
+		.stall_m2(stall_m2), 
 		.is_lhi(is_lhi));
 
 	control_unit control_unit_module(
@@ -397,7 +409,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 	PC pc_module(
 		.pc_in(pc_in),
 		.reset_n(reset_n),
-		.pc_update(pc_src || !isStall),
+		.pc_update(pc_src || (!isStall && !stall_m2)),
 		.clk(clk),
 		.pc_out(pc_out)
 	);
@@ -451,6 +463,17 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, addre
 		end
 		if(mem_read) begin
 			mem_read_data = data2;
+		end
+		if(mem_read) begin
+			if(ready_m2) begin
+				stall_m2 = 0;
+			end
+			else begin
+				stall_m2 = 1;
+			end
+		end
+		if(mem_write) begin
+		
 		end
 	end
 
