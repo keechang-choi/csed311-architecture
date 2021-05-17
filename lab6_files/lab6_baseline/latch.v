@@ -114,7 +114,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_o
 	
 	always @(posedge clk) 
 	begin
-		if (stall_me) begin
+		if (!stall_m2) begin
 		A_out <= A_in;
 		B_out <= B_in;
 		imm_out <= imm_in;
@@ -187,7 +187,7 @@ pc_next_out, pc_out, aluout_out, bcond_out,A_out, B_out, inst_out, dest_out, isS
 	
 	always @(posedge clk) 
 	begin
-		if(stall_m2) begin
+		if(!stall_m2) begin
 		pc_next_out <= pc_next_in;
 		pc_out <= pc_in;
 		aluout_out <= aluout_in;
