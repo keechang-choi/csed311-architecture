@@ -16,7 +16,8 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	wire [`WORD_SIZE-1:0] address1;
 	output data1;
 	reg [`WORD_SIZE-1:0] data1;
-	output reg ready;
+	output ready;
+	reg ready;
 
 	input read_m2;
 	wire read_m2;
@@ -29,7 +30,7 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	
 	reg [`WORD_SIZE-1:0] memory [0:`MEMORY_SIZE-1];
 	reg [`WORD_SIZE-1:0] output_data2;
-	reg counter;
+	reg [`WORD_SIZE-1:0] counter;
 	
 	
 	assign data2 = read_m2?output_data2:`WORD_SIZE'bz;
@@ -245,7 +246,8 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 			if(read_m1) begin
 				data1 <= (write_m2 & address1==address2)?data2:memory[address1];
 			end
-			if(counter == 2) begin
+			if(signed'(counter) == 2) begin
+				$display("#### enters");
 				if(read_m2) begin
 					output_data2 <= memory[address2];
 					ready <= 1;	
@@ -263,7 +265,9 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 		end
 
 	always @(posedge clk ) begin
-		if(read_m2 || write_m2)begin
+		if((read_m2 || write_m2) && signed'(counter) < 2) begin
+			$display("#### counter goes");
+			$display("#### counter: %d", counter);
 			counter <= counter + 1;
 		end 
 	end

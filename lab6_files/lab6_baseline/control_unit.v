@@ -165,7 +165,7 @@ endmodule
 
 
 
-module control_unit (reset_n, inst, is_stall, is_flush, halt, wwd, new_inst);
+module control_unit (reset_n, inst, is_stall, is_flush, halt, wwd, new_inst, stall_m2);
 
 	//input [3:0] opcode;
 	//input [5:0] func_code;
@@ -173,6 +173,7 @@ module control_unit (reset_n, inst, is_stall, is_flush, halt, wwd, new_inst);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
 	input is_flush;
+	input stall_m2;
 	
 
   	//additional control signals. pc_to_reg: to support JAL, JRL. halt: to support HLT. wwd: to support WWD. new_inst: new instruction start
@@ -208,7 +209,7 @@ module control_unit (reset_n, inst, is_stall, is_flush, halt, wwd, new_inst);
 			new_inst = 0;
 		end
 		else begin
-			if(!is_stall && !is_flush) begin
+			if(!is_stall && !is_flush && !stall_m2) begin
 				new_inst = 1;
 				if(opcode==`HLT_OP && func_code == `INST_FUNC_HLT) begin
 					halt = 1;
