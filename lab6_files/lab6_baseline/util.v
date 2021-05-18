@@ -35,3 +35,20 @@ module immediate_generator(immediate_value, extended_immediate_value);
     
     assign extended_immediate_value = {{8{immediate_value[7]}}, immediate_value[7:0]};
 endmodule
+
+module counter(clk, reset, on, cnt);
+	input clk;
+	input reset;
+	input on;
+	output reg [2:0] cnt;
+	always @(*) begin
+		if(reset) begin
+			cnt = 0;
+		end
+	end
+	always @(posedge clk) begin
+		if(on) begin
+			cnt <= cnt+ 1;
+		end
+	end
+endmodule

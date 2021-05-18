@@ -14,6 +14,11 @@ module control_unit_EX(inst,is_stall,is_flush, alu_src_B, alu_op);
 	assign funcode = inst[5:0];
 
 	always @(*) begin
+		if(opcode == `NOP_OP) begin
+			alu_src_B = 0;
+			alu_op = 0;
+		end
+		else begin
 		if(opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
  			opcode==`LWD_OP || opcode==`SWD_OP ||
  			 opcode==`BGZ_OP || opcode==`BLZ_OP ) begin
@@ -29,6 +34,7 @@ module control_unit_EX(inst,is_stall,is_flush, alu_src_B, alu_op);
 		end
 		else begin
 			alu_op = 0;
+		end
 		end
 	end
 endmodule
@@ -52,7 +58,7 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 	assign opcode = inst[15:12];
 	assign func_code = inst[5:0];
 	always @(*) begin
-		if(is_flush || is_stall) begin
+		if(opcode == `NOP_OP || is_flush || is_stall) begin
 			mem_read = 0;
 			mem_write = 0;
 			pc_br = 0;
@@ -115,7 +121,7 @@ module control_unit_WB(inst,is_stall, is_flush, stall_m2 , mem_to_reg, reg_write
 	assign func_code = inst[5:0];
 
 	always @(*) begin
-		if(is_flush || stall_m2) begin
+		if(opcode == `NOP_OP ||is_flush || stall_m2) begin
 			mem_to_reg = 0;
 			reg_write = 0;
 			pc_to_reg = 0;

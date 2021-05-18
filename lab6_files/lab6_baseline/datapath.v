@@ -7,7 +7,7 @@
 `include "hazard.v"
 `include "latch.v"
 
-module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready_m2, address2, data2, num_inst, output_port, is_halted);
+module datapath(clk, reset_n, read_m1, address1, data1, ready_m1, read_m2, write_m2, ready_m2, address2, data2, num_inst, output_port, is_halted);
 
 	input clk;
 	input reset_n;
@@ -17,6 +17,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 	output read_m2;
 	output write_m2;
 	output [`WORD_SIZE-1:0] address2;
+	input ready_m1;
 	input ready_m2;
 
 	input [`WORD_SIZE-1:0] data1;
@@ -152,9 +153,13 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 
 	//mem read data
 	reg [`WORD_SIZE-1:0] mem_read_data;
+	reg [`WORD_SIZE-1:0] mem_read_inst;
 
 	// stall memory
 	reg stall_m2;
+	reg stall_m1;
+
+	reg inst_read;
 
 	assign immediate_value = inst_out_IFID[7:0];
 	assign read1 = inst_out_IFID[11:10];
@@ -170,6 +175,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		output_port = 0;
 		flush_in = 0;
 		stall_m2 = 0;
+		stall_m2 = 0;
+		inst_read = 0;
 	end
 
 	always @(posedge reset_n)
@@ -178,10 +185,13 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		output_port <= 0;
 		flush_in <= 0;
 		stall_m2 <= 0;
+		stall_m2 <= 0;
+		inst_read <= 0;
+		mem_read_inst <= {`NOP_OP,12'b0};
 	end
 
 	IFID IFID_module(
-		.inst_in(data1),  // 확인 필요
+		.inst_in(mem_read_inst),  // 확인 필요
 		.inst_out(inst_out_IFID), 
 		.pc_in(pc_out), // 확인 필요
 		.stall_on(isStall),
@@ -412,10 +422,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 	PC pc_module(
 		.pc_in(pc_in),
 		.reset_n(reset_n),
-		.pc_update(pc_src || (!isStall && !stall_m2)),
+		.pc_update(pc_src || (!isStall && !stall_m2 && !stall_m1)),
 		.clk(clk),
-		.pc_out(pc_out)
-	);
+		.pc_out(pc_out)	);
 
 
 	// pc_next_in_EXMEM
@@ -464,6 +473,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		else begin
 			flush_in = 0;
 		end
+		
 		if(mem_read) begin
 			mem_read_data = data2;
 		end
@@ -484,7 +494,22 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 			end
 		end
 	end
-
+	always @(*) begin
+		//if(inst_read) begin
+			//mem_read_inst = data1;
+			//inst_read = 0;
+			if(ready_m1) begin
+				mem_read_inst = data1;
+				//inst_read = 0;
+				stall_m1 = 0;
+			end
+			else begin
+				mem_read_inst = {`NOP_OP,12'b0};
+				//inst_read = 0;
+				stall_m1 = 1;
+			end
+		//end
+	end
 	always @(posedge clk) begin
 		
 		if(new_inst)begin
@@ -493,11 +518,18 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		if(wwd) begin
 			output_port <= A_out_MEMWB;
 		end
+		/*if(isStall) begin
+			inst_read = 0;
+		end
+		else begin
+			inst_read = 1;
+		end*/
+		//inst_read <= 1;
 	end
 
 	assign is_halted = halt;
 
-	assign read_m1 = 1;
+	assign read_m1 = 1;//inst_read;
 	assign address1 = pc_out;
 
 	assign read_m2  = mem_read; 
@@ -507,17 +539,17 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 	
 	always @(posedge clk) begin
 		#(3*100/4);
-		// $display("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		 $display("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		// $display("@@@@ data1 : %b", data1);
-		// $display("@@@@    inst_out_IFID : %b", inst_out_IFID);
+		 $display("@@@@    inst_out_IFID : %b", inst_out_IFID);
 		// $display("@@@@ isStall_out_IFID : %d", isStall_out_IFID);		
 		// $display("@@@@   flush_out_IFID : %d", flush_out_IFID);	
 		// $display("@@@@        read_out1 : %d", read_out1);
 		// $display("@@@@        read_out2 : %d", read_out2);
 		// $display("@@@@      pc_out_IFID : %h", pc_out_IFID);
 
-		// $display("========================================================");
-		// $display("@@@@    inst_out_IDEX : %b", inst_out_IDEX);
+		 $display("========================================================");
+		 $display("@@@@    inst_out_IDEX : %b", inst_out_IDEX);
 		// $display("@@@@ isStall_out_IDEX : %d", isStall_out_IDEX);	
 		// $display("@@@@   flush_out_IDEX : %d", flush_out_IDEX);		
 		// $display("@@@@   reg_write_IDEX : %d", reg_write_IDEX);
@@ -530,9 +562,9 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		// $display("@@@        pc_br_IDEX : %b", pc_br_IDEX);
 		// $display("@@@@      pc_out_IDEX : %h", pc_out_IDEX);
 
-		// $display("========================================================");
+		 $display("========================================================");
 
-		// $display("@@@@    inst_out_EXMEM : %b", inst_out_EXMEM);
+		 $display("@@@@    inst_out_EXMEM : %b", inst_out_EXMEM);
 		// $display("@@@@ isStall_out_EXMEM : %d", isStall_out_EXMEM);	
 		// $display("@@@@   flush_out_EXMEM : %d", flush_out_EXMEM);	
 		// $display("@@@@   reg_write_EXMEM : %d", reg_write_EXMEM);
@@ -544,8 +576,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		// $display("@@@    bcond_out_EXMEM : %b", bcond_out_EXMEM);
 		// $display("@@@@      pc_out_EXMEM : %h", pc_out_EXMEM);
 
-		// $display("========================================================");
-		// $display("@@@@    inst_out_MEMWB : %b", inst_out_MEMWB);
+		 $display("========================================================");
+		 $display("@@@@    inst_out_MEMWB : %b", inst_out_MEMWB);
 		// $display("@@@@ isStall_out_MEMWB : %d", isStall_out_MEMWB);	
 		// $display("@@@@   flush_out_MEMWB : %d", flush_out_MEMWB);	
 		// $display("@@@@   reg_write_MEMWB : %d", reg_write);
@@ -559,7 +591,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 
 		
 
-		// $display("========================================================");
+		 $display("========================================================");
 		// $display("@@@    pc_in : %b", pc_in);
 		// $display("@@@ pc_out b : %b", pc_out);
 		// $display("@@@ pc_out h : %h", pc_out);
@@ -577,6 +609,10 @@ module datapath(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, ready
 		// $display("@@@          data2 : %d", data2);
 		// $display("@@@  mem_read_data : %d", mem_read_data);	
 	
+		$display("@@@       address1 : %h", address1);
+		$display("@@@        read_m1 : %d", read_m1);
+		$display("@@@          data1 : %b", data1);
+		$display("@@@  mem_read_inst : %b", mem_read_inst);	
 		
 		
 		// $display("@@@ mem_to_reg : %d", mem_to_reg);
