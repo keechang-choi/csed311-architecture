@@ -1,7 +1,7 @@
 `define WORD_SIZE 16
 `include "opcodes.v"
 
-module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_out,  pc_out, isStall_out,  reset_n, clk);
+module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, stall_m2, is_flush_out,  pc_out, isStall_out,  reset_n, clk);
     // TODO: IFID latch를 컨트롤 할 control unit input을 받아야함
 	// inst_in이 IR_in 임
 	input clk;
@@ -11,6 +11,7 @@ module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_ou
 	input stall_on;
 	input is_flush_in;
 	input flush_on;
+	input stall_m2;
 	output reg [`WORD_SIZE-1:0] pc_out;
     	output reg [`WORD_SIZE-1:0] inst_out;
 	output reg isStall_out;
@@ -34,6 +35,7 @@ module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_ou
 	
 	always @(posedge clk) 
 	begin
+		if(!stall_m2) begin
         	//if(!is_flush_out) begin
 			if(!isStall_out) begin
 				inst_out <= inst_in;
@@ -46,6 +48,7 @@ module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_ou
 		end*/
 		is_flush_out <= is_flush_in;
 		//isStall_out <= isStall_in;    
+		end
 		
 	end
 	always @(*) begin
@@ -67,7 +70,7 @@ module IFID(inst_in, inst_out, pc_in, stall_on,flush_on,is_flush_in, is_flush_ou
 endmodule
 
 
-module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_on,
+module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_on, stall_m2,
  A_out, B_out, pc_out, imm_out, inst_out, isStall_out, is_flush_out, reset_n, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
@@ -80,6 +83,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_o
 	input isStall_in;
 	input is_flush_in;
 	input flush_on;
+	input stall_m2;
 	output reg [`WORD_SIZE-1:0] A_out;
     output reg [`WORD_SIZE-1:0] B_out;
 	output reg [`WORD_SIZE-1:0] pc_out;
@@ -110,6 +114,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_o
 	
 	always @(posedge clk) 
 	begin
+		if (!stall_m2) begin
 		A_out <= A_in;
 		B_out <= B_in;
 		imm_out <= imm_in;
@@ -117,7 +122,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_o
 		inst_out <= inst_in;
 		isStall_out <= isStall_in;
 		is_flush_out <= is_flush_in;
-  
+  		end
 	end
 	always @(*) begin
 		if(flush_on) begin
@@ -127,7 +132,7 @@ module IDEX(A_in, B_in, pc_in, imm_in, inst_in, isStall_in, is_flush_in, flush_o
 endmodule
 
 				
-module EXMEM(pc_next_in, pc_in, aluout_in, bcond_in,A_in, B_in, inst_in, dest_in, isStall_in, is_flush_in,
+module EXMEM(pc_next_in, pc_in, aluout_in, bcond_in,A_in, B_in, inst_in, dest_in, isStall_in, is_flush_in, stall_m2,
 pc_next_out, pc_out, aluout_out, bcond_out,A_out, B_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
@@ -142,6 +147,7 @@ pc_next_out, pc_out, aluout_out, bcond_out,A_out, B_out, inst_out, dest_out, isS
 	input [1:0] dest_in;
 	input isStall_in;
 	input is_flush_in;
+	input stall_m2;
 	output reg [`WORD_SIZE-1:0] pc_out;
 	output reg [`WORD_SIZE-1:0] pc_next_out;
     	output reg [`WORD_SIZE-1:0] aluout_out;
@@ -181,6 +187,7 @@ pc_next_out, pc_out, aluout_out, bcond_out,A_out, B_out, inst_out, dest_out, isS
 	
 	always @(posedge clk) 
 	begin
+		if(!stall_m2) begin
 		pc_next_out <= pc_next_in;
 		pc_out <= pc_in;
 		aluout_out <= aluout_in;
@@ -191,13 +198,14 @@ pc_next_out, pc_out, aluout_out, bcond_out,A_out, B_out, inst_out, dest_out, isS
 		dest_out <= dest_in;
 		isStall_out <= isStall_in;
 		is_flush_out <= is_flush_in;
+		end
 	end
 
 endmodule
 
 				
-module MEMWB(pc_in, mdr_in, aluout_in, inst_in, dest_in, isStall_in, is_flush_in,A_in,
-A_out, pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n, clk);
+module MEMWB(pc_in, mdr_in, aluout_in, inst_in, dest_in, isStall_in, is_flush_in,A_in, stall_m2,
+A_out, pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_out, reset_n,stall_m2_out, clk);
     // TODO: IDEX latch를 컨트롤 할 control unit input을 받아야함
 	input clk;
 	input reset_n;
@@ -209,6 +217,7 @@ A_out, pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_ou
 	input isStall_in;
 	input is_flush_in;
 	input [`WORD_SIZE-1:0] A_in;
+	input stall_m2;
 	output reg [`WORD_SIZE-1:0] A_out;
 	output reg [`WORD_SIZE-1:0] pc_out;
 	output reg [`WORD_SIZE-1:0] mdr_out;
@@ -217,6 +226,7 @@ A_out, pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_ou
 	output reg [1:0] dest_out;
 	output reg isStall_out;
 	output reg is_flush_out;
+	output reg stall_m2_out;
 
 	initial begin
 		A_out = 0;
@@ -239,6 +249,7 @@ A_out, pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_ou
 		dest_out <= 0;
 		isStall_out <= 0;
 		is_flush_out <= 0;
+		stall_m2_out <= 0;
 	end
 	
 	always @(posedge clk) 
@@ -251,6 +262,7 @@ A_out, pc_out, mdr_out, aluout_out, inst_out, dest_out, isStall_out, is_flush_ou
 		dest_out <= dest_in;
 		isStall_out <= isStall_in;
 		is_flush_out <= is_flush_in;
+		stall_m2_out <= stall_m2;
 	end
 endmodule
 

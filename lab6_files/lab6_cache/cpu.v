@@ -3,7 +3,7 @@
 
 `include "datapath.v"
 
-module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted);
+module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, num_inst, output_port, is_halted, ready_m1, ready_m2);
 
 	input clk;
 	input reset_n;
@@ -16,7 +16,8 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 
 	input [`WORD_SIZE-1:0] data1;
 	inout [`WORD_SIZE-1:0] data2;
-
+	input ready_m1;
+	input ready_m2;
 	output [`WORD_SIZE-1:0] num_inst;
 	output [`WORD_SIZE-1:0] output_port;
 	output is_halted;
@@ -36,7 +37,9 @@ module cpu(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, 
 	 	.data2(data2), 
 	 	.num_inst(num_inst), 
 	 	.output_port(output_port), 
-	 	.is_halted(is_halted));
+	 	.is_halted(is_halted),
+		.ready_m1(ready_m1),
+		.ready_m2(ready_m2));
 	
 	
 

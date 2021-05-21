@@ -14,6 +14,11 @@ module control_unit_EX(inst,is_stall,is_flush, alu_src_B, alu_op);
 	assign funcode = inst[5:0];
 
 	always @(*) begin
+		if(opcode == `NOP_OP) begin
+			alu_src_B = 0;
+			alu_op = 0;
+		end
+		else begin
 		if(opcode==`ADI_OP ||opcode==`ORI_OP || opcode==`LHI_OP ||
  			opcode==`LWD_OP || opcode==`SWD_OP ||
  			 opcode==`BGZ_OP || opcode==`BLZ_OP ) begin
@@ -29,6 +34,7 @@ module control_unit_EX(inst,is_stall,is_flush, alu_src_B, alu_op);
 		end
 		else begin
 			alu_op = 0;
+		end
 		end
 	end
 endmodule
@@ -52,7 +58,7 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 	assign opcode = inst[15:12];
 	assign func_code = inst[5:0];
 	always @(*) begin
-		if(is_flush || is_stall) begin
+		if(opcode == `NOP_OP || is_flush || is_stall) begin
 			mem_read = 0;
 			mem_write = 0;
 			pc_br = 0;
@@ -98,10 +104,11 @@ module control_unit_M(inst, is_stall, is_flush, mem_read, mem_write, pc_br, pc_j
 	end
 endmodule
 
-module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg, is_lhi);
+module control_unit_WB(inst,is_stall, is_flush, stall_m2 , mem_to_reg, reg_write, pc_to_reg, is_lhi);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
 	input is_flush;
+	input stall_m2;
 	output reg mem_to_reg;
 	output reg reg_write;
 	output reg pc_to_reg;
@@ -114,7 +121,7 @@ module control_unit_WB(inst,is_stall, is_flush, mem_to_reg, reg_write, pc_to_reg
 	assign func_code = inst[5:0];
 
 	always @(*) begin
-		if(is_flush) begin
+		if(opcode == `NOP_OP ||is_flush || stall_m2) begin
 			mem_to_reg = 0;
 			reg_write = 0;
 			pc_to_reg = 0;
@@ -164,7 +171,7 @@ endmodule
 
 
 
-module control_unit (reset_n, inst, is_stall, is_flush, halt, wwd, new_inst);
+module control_unit (reset_n, inst, is_stall, is_flush, halt, wwd, new_inst, stall_m2);
 
 	//input [3:0] opcode;
 	//input [5:0] func_code;
@@ -172,6 +179,7 @@ module control_unit (reset_n, inst, is_stall, is_flush, halt, wwd, new_inst);
 	input [`WORD_SIZE-1:0] inst;
 	input is_stall;
 	input is_flush;
+	input stall_m2;
 	
 
   	//additional control signals. pc_to_reg: to support JAL, JRL. halt: to support HLT. wwd: to support WWD. new_inst: new instruction start
@@ -207,7 +215,7 @@ module control_unit (reset_n, inst, is_stall, is_flush, halt, wwd, new_inst);
 			new_inst = 0;
 		end
 		else begin
-			if(!is_stall && !is_flush) begin
+			if(!is_stall && !is_flush && !stall_m2) begin
 				new_inst = 1;
 				if(opcode==`HLT_OP && func_code == `INST_FUNC_HLT) begin
 					halt = 1;

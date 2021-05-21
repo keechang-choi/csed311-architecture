@@ -4,7 +4,7 @@
 `define WORD_SIZE 16	//	instead of 2^16 words to reduce memory
 			//	requirements in the Active-HDL simulator 
 
-module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2);
+module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address2, data2, ready_m1, ready_m2);
 	input clk;
 	wire clk;
 	input reset_n;
@@ -16,7 +16,9 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	wire [`WORD_SIZE-1:0] address1;
 	output data1;
 	reg [`WORD_SIZE-1:0] data1;
-	
+	output reg ready_m1;
+	output reg ready_m2;
+
 	input read_m2;
 	wire read_m2;
 	input write_m2;
@@ -28,12 +30,31 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	
 	reg [`WORD_SIZE-1:0] memory [0:`MEMORY_SIZE-1];
 	reg [`WORD_SIZE-1:0] output_data2;
+	reg [`WORD_SIZE-1:0] counter;
+	
+	reg reset_m1;
+	reg reset_m2;
+	reg on_m1;
+	reg on_m2;
+
+	wire [2:0] cnt_m1;
+	wire [2:0]cnt_m2;
 	
 	assign data2 = read_m2?output_data2:`WORD_SIZE'bz;
+	initial begin
+		reset_m1 = 1;
+		reset_m2 = 1;
+		on_m1 = 0;
+		on_m2 = 0;
+		ready_m1 = 0;
+		ready_m2 = 0;
+	end
 	
 	always@(posedge clk)
 		if(!reset_n)
 			begin
+				reset_m1 <= 1;
+				reset_m2 <= 1;
 				memory[16'h0] <= 16'h9023;
 				memory[16'h1] <= 16'h1;
 				memory[16'h2] <= 16'hffff;
@@ -234,10 +255,66 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 				memory[16'hc5] <= 16'hf819;
 				memory[16'hc6] <= 16'hf01d;
 			end
-		else
-			begin
-				if(read_m1)data1 <= (write_m2 & address1==address2)?data2:memory[address1];
-				if(read_m2)output_data2 <= memory[address2];
-				if(write_m2)memory[address2] <= data2;															  
+		else begin
+			if(signed'(cnt_m1) >= 2) begin
+				//$display("#### enters m1");
+				if(read_m1) begin
+					$display("#### mem read m1");
+					data1 <= (write_m2 & address1==address2)?data2:memory[address1];
+					ready_m1 <= 1;	
+				end
+				on_m1 <= 0;
+				reset_m1 <= 1;
 			end
+			else begin
+				on_m1 <= 1;
+				reset_m1 <= 0;
+				ready_m1 <= 0;
+			end
+			/*if(read_m1) begin
+				data1 <= (write_m2 & address1==address2)?data2:memory[address1];
+				ready_m1 <= 1;
+			end*/
+			if(signed'(cnt_m2) >= 2) begin
+				//$display("#### enters m2");
+				if(read_m2) begin
+					$display("#### mem read m2");
+					output_data2 <= memory[address2];
+					ready_m2 <= 1;	
+				end
+				
+				if(write_m2) begin
+					memory[address2] <= data2;
+					ready_m2 <=1;
+				end
+				//counter <= 0;
+				on_m2 <= 0;
+				reset_m2 <= 1;
+			end
+			else begin
+				on_m2 <= 1;
+				reset_m2 <= 0;
+				ready_m2 <= 0;
+			end
+		end
+	counter counter_module_m1(.clk(clk),
+				.reset(reset_m1),
+				.on(on_m1),
+				.cnt(cnt_m1));
+
+	counter counter_module_m2(.clk(clk),
+				.reset(reset_m2),
+				.on(on_m2),
+				.cnt(cnt_m2));
+
+	/*
+	always @(posedge clk ) begin
+		if((read_m2 || write_m2) && signed'(counter) < 2) begin
+			$display("#### counter goes");
+			$display("#### counter: %d", counter);
+			counter <= counter + 1;
+		end 
+	end
+	*/
+
 endmodule
