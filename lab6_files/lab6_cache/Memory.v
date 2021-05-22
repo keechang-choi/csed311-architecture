@@ -14,8 +14,8 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	wire read_m1;
 	input [`WORD_SIZE-1:0] address1;
 	wire [`WORD_SIZE-1:0] address1;
-	output data1;
-	reg [`WORD_SIZE-1:0] data1;
+	output [`WORD_SIZE * 4 -1:0] data1;
+	reg [`WORD_SIZE * 4-1:0] data1;
 	output reg ready_m1;
 	output reg ready_m2;
 
@@ -260,7 +260,15 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 				//$display("#### enters m1");
 				if(read_m1) begin
 					$display("#### mem read m1");
-					data1 <= (write_m2 & address1==address2)?data2:memory[address1];
+					if(write_m2 & address1==address2)begin
+						data1[`WORD_SIZE-1:0] <= data2;
+					end
+					else begin
+						data1[`WORD_SIZE-1:0] <= memory[address1 - (address1 % 4)];
+						data1[`WORD_SIZE*2-1 : `WORD_SIZE] <= memory[address1 - (address1 % 4)+1];
+						data1[`WORD_SIZE*3-1 : `WORD_SIZE*2] <= memory[address1 - (address1 % 4)+2];
+						data1[`WORD_SIZE*4-1 : `WORD_SIZE*3] <= memory[address1 - (address1 % 4)+3];
+					end
 					ready_m1 <= 1;	
 				end
 				on_m1 <= 0;

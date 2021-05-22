@@ -11,7 +11,7 @@ module cpu_TB();
 	
 	wire read_m1;
 	wire [`WORD_SIZE-1:0] address1;
-	wire [`WORD_SIZE-1:0] data1;
+	wire [`WORD_SIZE * 4 -1:0] data1;
 	wire read_m2;
 	wire write_m2;
 	wire [`WORD_SIZE-1:0] address2;
