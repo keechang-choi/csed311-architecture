@@ -43,5 +43,5 @@
 `define INST_FUNC_WWD 6'd28
 `define INST_FUNC_HLT 6'd29
 
-`define	WORD_SIZE	16			
+`define	WORD_SIZE	16
 `define	NUM_REGS	4

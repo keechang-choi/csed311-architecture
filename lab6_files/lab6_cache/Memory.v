@@ -26,10 +26,10 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	input [`WORD_SIZE-1:0] address2;
 	wire [`WORD_SIZE-1:0] address2;
 	inout data2;
-	wire [`WORD_SIZE-1:0] data2;
+	wire [4*`WORD_SIZE-1:0] data2;
 	
 	reg [`WORD_SIZE-1:0] memory [0:`MEMORY_SIZE-1];
-	reg [`WORD_SIZE-1:0] output_data2;
+	reg [4*`WORD_SIZE-1:0] output_data2;
 	reg [`WORD_SIZE-1:0] counter;
 	
 	reg reset_m1;
@@ -40,7 +40,7 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 	wire [7:0] cnt_m1;
 	wire [7:0]cnt_m2;
 	
-	assign data2 = read_m2?output_data2:`WORD_SIZE'bz;
+	assign data2 = read_m2?output_data2:64'bz;
 	initial begin
 		reset_m1 = 1;
 		reset_m2 = 1;
@@ -288,12 +288,16 @@ module Memory(clk, reset_n, read_m1, address1, data1, read_m2, write_m2, address
 				//$display("#### enters m2");
 				if(read_m2) begin
 					$display("#### mem read m2");
-					output_data2 <= memory[address2];
+					//output_data2 <= memory[address2];
+					output_data2[`WORD_SIZE-1:0] <= memory[address2 - (address2 % 4)];
+					output_data2[`WORD_SIZE*2-1 : `WORD_SIZE] <= memory[address2 - (address2 % 4)+1];
+					output_data2[`WORD_SIZE*3-1 : `WORD_SIZE*2] <= memory[address2 - (address2 % 4)+2];
+					output_data2[`WORD_SIZE*4-1 : `WORD_SIZE*3] <= memory[address2 - (address2 % 4)+3];
 					ready_m2 <= 1;	
 				end
 				
 				if(write_m2) begin
-					memory[address2] <= data2;
+					memory[address2] <= data2[`WORD_SIZE-1:0];
 					ready_m2 <=1;
 				end
 				//counter <= 0;

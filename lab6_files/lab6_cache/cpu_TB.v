@@ -15,7 +15,7 @@ module cpu_TB();
 	wire read_m2;
 	wire write_m2;
 	wire [`WORD_SIZE-1:0] address2;
-	wire [`WORD_SIZE-1:0] data2;
+	wire [4*`WORD_SIZE-1:0] data2;
 
 	// for debuging purpose
 	wire [`WORD_SIZE-1:0] num_inst;		// number of instruction during execution

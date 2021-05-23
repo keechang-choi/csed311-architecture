@@ -314,7 +314,7 @@ module datapath(clk, reset_n, read_m1, address1, data1, ready_m1, read_m2, write
 
 	MEMWB MEMWB_module(
 		.pc_in(pc_out_EXMEM),
-		.mdr_in(data2), // 확인 필요 
+		.mdr_in(mem_read_data), // 확인 필요 
 		.aluout_in(aluout_out_EXMEM), 
 		.inst_in(inst_out_EXMEM),
 		.dest_in(dest_out_EXMEM), 
@@ -578,8 +578,8 @@ module datapath(clk, reset_n, read_m1, address1, data1, ready_m1, read_m2, write
 
 		 $display("========================================================");
 		 $display("@@@@    inst_out_MEMWB : %b", inst_out_MEMWB);
-		// $display("@@@@ isStall_out_MEMWB : %d", isStall_out_MEMWB);	
-		// $display("@@@@   flush_out_MEMWB : %d", flush_out_MEMWB);	
+		 $display("@@@@ isStall_out_MEMWB : %d", isStall_out_MEMWB);	
+		 $display("@@@@   flush_out_MEMWB : %d", flush_out_MEMWB);	
 		// $display("@@@@   reg_write_MEMWB : %d", reg_write);
 
 		// $display("@@@   alu_output_MEMWB : %d", aluout_out_MEMWB);
@@ -604,18 +604,22 @@ module datapath(clk, reset_n, read_m1, address1, data1, ready_m1, read_m2, write
 
 
 		
-		// $display("@@@       address2 : %d", address2);
-		// $display("@@@        read_m2 : %d", read_m2);
-		// $display("@@@          data2 : %d", data2);
-		// $display("@@@  mem_read_data : %d", mem_read_data);	
+		$display("@@@       address2 : %d", address2);
+		 $display("@@@        read_m2 : %d", read_m2);
+		$display("@@@        write_m2 : %d", write_m2);
+		$display("@@@        ready_m2 : %d", ready_m2);
+
+		 $display("@@@          data2 : %d", data2);
+		 $display("@@@  mem_read_data : %d", mem_read_data);	
 	
 		$display("@@@       address1 : %h", address1);
 		$display("@@@        read_m1 : %d", read_m1);
 		$display("@@@          data1 : %b", data1);
 		$display("@@@  mem_read_inst : %b", mem_read_inst);	
-		
-		
-		// $display("@@@ mem_to_reg : %d", mem_to_reg);
+		$display("@@@ stall_m1 : %d", stall_m1);
+		$display("@@@ stall_m2 : %d", reg_write);
+		$display("@@@ reg_write : %d", reg_write);
+		$display("@@@ mem_to_reg : %d", mem_to_reg);
 		// $display("@@@  pc_to_reg : %d", pc_to_reg);
 		// $display("@@@       cond : %b", {pc_to_reg || is_lhi ,mem_to_reg || is_lhi});
 		// $display("@@@ write_data : %d", write_data);
