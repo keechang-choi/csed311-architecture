@@ -42,7 +42,11 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 	
 	
 	// assign hit = valid[index] && tag_lines[index];
+	initial begin
+		hit = 0;
+		ready_c = 0;
 
+	end
 
 	always @(posedge clk) begin
 		if(!reset_n) begin
@@ -75,14 +79,14 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 		end
 	end
 
-	always @(posedge clk ) begin
+	always @(posedge clk) begin
 		hit <= valid[index] && (tag == tag_lines[index]);
 	end
 
 	always @(posedge clk) begin
 		if(write_c) begin
 			if (hit) begin
-				cache_lines[index][`WORD_SIZE * signed'(bo+1) -1 -: `WORD_SIZE ] <= data_m[`WORD_SIZE-1:0];
+				cache_lines[index][`WORD_SIZE * unsigned'(bo) +: `WORD_SIZE ] <= data_m[`WORD_SIZE-1:0];
 				valid[index] = 1;
 			end
 			if (!hit) begin
@@ -91,7 +95,7 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 		if(read_c) begin
 			if (hit) begin
 				$display("###### read hit");
-				data_c <= cache_lines[index][`WORD_SIZE * (bo) +: `WORD_SIZE];
+				data_c <= cache_lines[index][`WORD_SIZE * unsigned'(bo) +: `WORD_SIZE];
 				ready_c <= 1 ;
 				num_access <= num_access + 1;
 				read_m <= 0;
@@ -99,12 +103,12 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 			else begin
 				$display("###### read miss");
 				if(ready_m) begin
-					cache_lines[index][`WORD_SIZE*1-1 : `WORD_SIZE*0] <= data_m[`WORD_SIZE*1-1 : `WORD_SIZE*0];
-					cache_lines[index][`WORD_SIZE*2-1 : `WORD_SIZE*1] <= data_m[`WORD_SIZE*2-1 : `WORD_SIZE*1];
-					cache_lines[index][`WORD_SIZE*3-1 : `WORD_SIZE*2] <= data_m[`WORD_SIZE*3-1 : `WORD_SIZE*2];
-					cache_lines[index][`WORD_SIZE*4-1 : `WORD_SIZE*3] <= data_m[`WORD_SIZE*4-1 : `WORD_SIZE*3];
+					cache_lines[index][`WORD_SIZE*0 +: `WORD_SIZE] <= data_m[`WORD_SIZE*0 + : `WORD_SIZE];
+					cache_lines[index][`WORD_SIZE*1 +: `WORD_SIZE] <= data_m[`WORD_SIZE*1 + : `WORD_SIZE];
+					cache_lines[index][`WORD_SIZE*2 +: `WORD_SIZE] <= data_m[`WORD_SIZE*2 + : `WORD_SIZE];
+					cache_lines[index][`WORD_SIZE*3 +: `WORD_SIZE] <= data_m[`WORD_SIZE*3 + : `WORD_SIZE];
 					tag_lines[index] <= tag;
-					data_c <= data_m[`WORD_SIZE * signed'(bo) +: `WORD_SIZE];
+					data_c <= data_m[`WORD_SIZE * unsigned'(bo) +: `WORD_SIZE];
 					ready_c <= 1;
 					read_m <= 0;
 				end
@@ -119,6 +123,30 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 			ready_c <= 0;
 		end
 		
+	end
+	always @(posedge clk ) begin
+		$display("#################");
+		$display("##### address_c: %b", address_c);
+		$display("##### hit: 		%b", hit);
+		$display("##### ready_m: 	%b", ready_m);
+		$display("##### ready_c: 	%b", ready_c);
+		$display("##### address_m: %b", address_m);
+		$display("##### read_m: 	%b", read_m);
+		$display("##### read_c: 	%b", read_c);
+		$display("##### data_c: 	%b", data_c);
+		$display("##### data_m: 	%b", data_m);
+		$display("##### data_m0: 	%b", data_m[`WORD_SIZE * signed'(0) +: `WORD_SIZE]);
+		$display("##### data_m1: 	%b", data_m[`WORD_SIZE * signed'(1) +: `WORD_SIZE]);
+		$display("##### data_m2: 	%b", data_m[`WORD_SIZE * signed'(2) +: `WORD_SIZE]);
+		$display("##### data_m3: 	%b", data_m[`WORD_SIZE * signed'(3) +: `WORD_SIZE]);
+		$display("##### data_m!: 	%b", data_m[`WORD_SIZE * unsigned'(bo) +: `WORD_SIZE]);
+
+
+		$display("##### bo: 		%b", bo);
+
+
+
+
 	end
 	// always @(*) begin
 	// 	read_c

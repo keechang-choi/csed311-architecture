@@ -40,7 +40,7 @@ module counter(clk, reset, on, cnt);
 	input clk;
 	input reset;
 	input on;
-	output reg [2:0] cnt;
+	output reg [7:0] cnt;
 	always @(*) begin
 		if(reset) begin
 			cnt = 0;
