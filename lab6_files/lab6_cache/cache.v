@@ -33,7 +33,7 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 	wire [`WORD_SIZE-1-4:0] tag;
 	wire [1:0] bo;
 	
-	reg hit;
+	wire hit;
 	
 	
 	assign bo = address_c[1:0];
@@ -43,14 +43,14 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 	
 	// assign hit = valid[index] && tag_lines[index];
 	initial begin
-		hit = 0;
 		ready_c = 0;
+		num_hit = 0;
+		num_access = 0;
 
 	end
 
 	always @(posedge clk) begin
 		if(!reset_n) begin
-			hit <= 0;
 			data_c <= 0;
 			num_hit <= 0;
 			num_hit <= 0;
@@ -79,30 +79,33 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 		end
 	end
 
-	always @(posedge clk) begin
-		hit <= valid[index] && (tag == tag_lines[index]);
-	end
+	// always @(posedge clk) begin
+		assign hit = valid[index] && (tag == tag_lines[index]);
+	// end
 
 	always @(posedge clk) begin
 		if(write_c) begin
 			if (hit) begin
 				cache_lines[index][`WORD_SIZE * unsigned'(bo) +: `WORD_SIZE ] <= data_m[`WORD_SIZE-1:0];
-				valid[index] = 1;
+				valid[index] <= 1;
+				dirty[index] <= 1;
 			end
 			if (!hit) begin
 			end
 		end
 		if(read_c) begin
+			num_access <= num_access + 1;
 			if (hit) begin
 				$display("###### read hit");
 				data_c <= cache_lines[index][`WORD_SIZE * unsigned'(bo) +: `WORD_SIZE];
 				ready_c <= 1 ;
-				num_access <= num_access + 1;
+				num_hit <= num_hit + 1;
 				read_m <= 0;
 			end
 			else begin
 				$display("###### read miss");
 				if(ready_m) begin
+					valid[index] <= 1;
 					cache_lines[index][`WORD_SIZE*0 +: `WORD_SIZE] <= data_m[`WORD_SIZE*0 + : `WORD_SIZE];
 					cache_lines[index][`WORD_SIZE*1 +: `WORD_SIZE] <= data_m[`WORD_SIZE*1 + : `WORD_SIZE];
 					cache_lines[index][`WORD_SIZE*2 +: `WORD_SIZE] <= data_m[`WORD_SIZE*2 + : `WORD_SIZE];
@@ -130,23 +133,14 @@ module cache (clk, reset_n, read_c, write_c, ready_m, address_c, data_c, data_m,
 		$display("##### hit: 		%b", hit);
 		$display("##### ready_m: 	%b", ready_m);
 		$display("##### ready_c: 	%b", ready_c);
-		$display("##### address_m: %b", address_m);
+		$display("##### address_m:  %b", address_m);
 		$display("##### read_m: 	%b", read_m);
 		$display("##### read_c: 	%b", read_c);
 		$display("##### data_c: 	%b", data_c);
 		$display("##### data_m: 	%b", data_m);
-		$display("##### data_m0: 	%b", data_m[`WORD_SIZE * signed'(0) +: `WORD_SIZE]);
-		$display("##### data_m1: 	%b", data_m[`WORD_SIZE * signed'(1) +: `WORD_SIZE]);
-		$display("##### data_m2: 	%b", data_m[`WORD_SIZE * signed'(2) +: `WORD_SIZE]);
-		$display("##### data_m3: 	%b", data_m[`WORD_SIZE * signed'(3) +: `WORD_SIZE]);
-		$display("##### data_m!: 	%b", data_m[`WORD_SIZE * unsigned'(bo) +: `WORD_SIZE]);
-
-
 		$display("##### bo: 		%b", bo);
-
-
-
-
+		$display("##### num_access: %d", num_access);
+		$display("##### num_hit: 	%d", num_hit);
 	end
 	// always @(*) begin
 	// 	read_c
